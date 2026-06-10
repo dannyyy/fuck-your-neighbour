@@ -5,9 +5,10 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'node:path'
 
-export default defineConfig({
-  // Projekt-Pfad der GitHub Page: https://dannyyy.github.io/fuck-your-neighbour/
-  base: '/fuck-your-neighbour/',
+export default defineConfig(({ command }) => ({
+  // Build → Projekt-Pfad der GitHub Page (https://dannyyy.github.io/fuck-your-neighbour/),
+  // Dev-Server bleibt unter "/".
+  base: command === 'build' ? '/fuck-your-neighbour/' : '/',
   plugins: [
     react(),
     tailwindcss(),
@@ -38,4 +39,4 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.{test,spec}.ts'],
   },
-})
+}))
