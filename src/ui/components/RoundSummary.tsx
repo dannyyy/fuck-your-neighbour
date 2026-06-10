@@ -1,0 +1,78 @@
+import { motion } from 'framer-motion'
+import { T } from '../../i18n/de'
+import { useStore } from '../../state/store'
+
+export function RoundSummary() {
+  const game = useStore((s) => s.game)!
+  const continueRound = useStore((s) => s.continueRound)
+  const last = game.history[game.history.length - 1]
+  if (!last) return null
+
+  return (
+    <Overlay>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="glass w-full max-w-sm rounded-3xl p-5"
+      >
+        <h2 className="mb-1 text-center font-display text-2xl text-gold-300">{T.roundResult}</h2>
+        <p className="mb-4 text-center text-xs text-gold-200/60">
+          {T.round} {last.round + 1} · {last.cardCount} {T.cards}
+        </p>
+
+        <div className="space-y-1.5">
+          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-2 text-[10px] uppercase tracking-wide text-gold-200/50">
+            <span />
+            <span className="text-right">{T.bid}</span>
+            <span className="text-right">{T.made}</span>
+            <span className="text-right">{T.points}</span>
+          </div>
+          {game.players.map((p, i) => {
+            const delta = last.deltas[i]
+            return (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 * i }}
+                className={`grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 rounded-xl px-2 py-2 ${
+                  p.isHuman ? 'bg-gold-400/15' : 'bg-felt-950/30'
+                }`}
+              >
+                <span className="truncate text-sm text-gold-200">{p.name}</span>
+                <span className="text-right text-sm text-gold-200/70">{last.bids[i] ?? '–'}</span>
+                <span className="text-right text-sm text-gold-200/70">{last.tricks[i]}</span>
+                <span
+                  className={`text-right font-display text-base ${
+                    delta >= 0 ? 'text-emerald-300' : 'text-rose-300'
+                  }`}
+                >
+                  {delta > 0 ? `+${delta}` : delta}
+                </span>
+              </motion.div>
+            )
+          })}
+        </div>
+
+        <button
+          onClick={continueRound}
+          className="mt-5 w-full rounded-2xl bg-gold-400 py-3 font-display text-lg text-felt-950 shadow-lg active:scale-[0.98]"
+        >
+          {T.continue}
+        </button>
+      </motion.div>
+    </Overlay>
+  )
+}
+
+export function Overlay({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="absolute inset-0 z-40 grid place-items-center bg-felt-950/70 p-4 backdrop-blur-sm"
+    >
+      {children}
+    </motion.div>
+  )
+}

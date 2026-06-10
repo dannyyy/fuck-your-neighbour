@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="32%" r="75%">
+      <stop offset="0%" stop-color="#19724a" />
+      <stop offset="55%" stop-color="#0a2e1f" />
+      <stop offset="100%" stop-color="#06160f" />
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)" />
+  <!-- Karte -->
+  <g transform="rotate(-8 256 256)">
+    <rect x="156" y="116" width="200" height="280" rx="26" fill="#f7f3e8" stroke="#d4a73c" stroke-width="6" />
+    <!-- Rose (Rosen) -->
+    <g transform="translate(256 256)" fill="#d6336c">
+      <ellipse cx="0" cy="-44" rx="26" ry="40" />
+      <ellipse cx="0" cy="-44" rx="26" ry="40" transform="rotate(60)" />
+      <ellipse cx="0" cy="-44" rx="26" ry="40" transform="rotate(120)" />
+      <ellipse cx="0" cy="-44" rx="26" ry="40" transform="rotate(180)" />
+      <ellipse cx="0" cy="-44" rx="26" ry="40" transform="rotate(240)" />
+      <ellipse cx="0" cy="-44" rx="26" ry="40" transform="rotate(300)" />
+      <circle cx="0" cy="0" r="26" fill="#efd58a" />
+    </g>
+    <text x="184" y="166" font-family="Georgia, serif" font-size="46" font-weight="700" fill="#d6336c">A</text>
+  </g>
+</svg>

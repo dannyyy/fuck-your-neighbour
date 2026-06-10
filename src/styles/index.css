@@ -1,0 +1,91 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Filz-Grüntöne (Tisch) */
+  --color-felt-950: #06160f;
+  --color-felt-900: #0a2e1f;
+  --color-felt-800: #0f4329;
+  --color-felt-700: #15663f;
+  --color-felt-600: #1c7d4e;
+
+  /* Gold-Akzente */
+  --color-gold-200: #f6e6b8;
+  --color-gold-300: #efd58a;
+  --color-gold-400: #e9c46a;
+  --color-gold-500: #d4a73c;
+  --color-gold-600: #b3851f;
+
+  /* Karten & Tinte */
+  --color-card: #f7f3e8;
+  --color-card-edge: #e6dcc4;
+  --color-ink-900: #1a1410;
+  --color-ink-700: #3d342a;
+
+  /* Schweizer Jass-Farben (Symbole) */
+  --color-suit-schellen: #e0a106;
+  --color-suit-rosen: #d6336c;
+  --color-suit-schilten: #2f6fb0;
+  --color-suit-eichel: #7a4a1e;
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'Outfit', system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-gold-200);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  /* Tiefe durch radialen Verlauf + Vignette */
+  background:
+    radial-gradient(circle at 50% 18%, #19724a 0%, var(--color-felt-900) 42%, var(--color-felt-950) 100%);
+  background-attachment: fixed;
+}
+
+#root {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Feine Korn-Textur als Atmosphäre-Overlay */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@utility glass {
+  background: color-mix(in srgb, var(--color-felt-950) 62%, transparent);
+  backdrop-filter: blur(14px) saturate(120%);
+  border: 1px solid color-mix(in srgb, var(--color-gold-400) 22%, transparent);
+}
+
+@utility hairline {
+  border: 1px solid color-mix(in srgb, var(--color-gold-400) 30%, transparent);
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+}
+
+/* Karten-Slot reserviert konstante Höhe, verhindert Layout-Sprünge */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
