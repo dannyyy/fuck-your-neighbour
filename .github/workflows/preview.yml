@@ -1,0 +1,68 @@
+name: Deploy Preview to GitHub Pages
+
+# Veröffentlicht main an der Wurzel und den Feature-Branch zusätzlich unter
+# /preview/ – so bleibt die Live-Seite unverändert, während sich Änderungen
+# unter https://<user>.github.io/fuck-your-neighbour/preview/ testen lassen.
+on:
+  push:
+    branches: ['claude/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Teilt sich die Pages-Sperre mit dem regulären Deploy, damit sich Deployments
+# nicht gegenseitig überschreiben.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # --- main → Wurzel (/) ---
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+      - run: npm ci
+        working-directory: main
+      - run: npm run build
+        working-directory: main
+      - run: |
+          mkdir -p _site
+          cp -r main/dist/. _site/
+
+      # --- Feature-Branch → /preview/ ---
+      - uses: actions/checkout@v4
+        with:
+          path: preview
+      - run: npm ci
+        working-directory: preview
+      - run: npm run build -- --base=/fuck-your-neighbour/preview/
+        working-directory: preview
+      - run: |
+          mkdir -p _site/preview
+          cp -r preview/dist/. _site/preview/
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
