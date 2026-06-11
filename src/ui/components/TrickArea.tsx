@@ -10,7 +10,7 @@ export function TrickArea() {
   if (!game) return null
 
   const plays: PlayedCard[] = flash ? flash.cards : game.trick?.currentLayer ?? []
-  const winnerId = flash?.winnerId ?? null
+  const winnerIds = flash?.winnerIds ?? []
   // Beim Stechen/„Duell“ kämpfen nur die Gleichstands-Spieler um den Stich – die
   // Abwürfe der übrigen werden abgeblendet, damit klar ist, wer noch im Rennen ist.
   const isDuel = !flash && !!game.trick?.isStechen
@@ -49,7 +49,7 @@ export function TrickArea() {
       <div className="flex flex-wrap items-end justify-center gap-2">
         <AnimatePresence mode="popLayout">
           {plays.map((pc) => {
-            const isWinner = winnerId === pc.playerId
+            const isWinner = winnerIds.includes(pc.playerId)
             const dimmed = isDimmed(pc.playerId)
             return (
               <motion.div

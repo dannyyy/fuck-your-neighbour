@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import type { Card, Rank } from './cards'
-import { erbenWinner, topContenders } from './trick'
+import type { Card, Rank, Suit } from './cards'
+import { erbenWinner, erbenWinners, topContenders } from './trick'
 import type { PlayedCard } from './types'
 
 const c = (rank: Rank): Card => ({ suit: 'schellen', rank })
 const play = (playerId: number, rank: Rank): PlayedCard => ({ playerId, card: c(rank) })
+const playS = (playerId: number, rank: Rank, suit: Suit): PlayedCard => ({
+  playerId,
+  card: { suit, rank },
+})
 
 describe('topContenders', () => {
   it('liefert den einzelnen höchsten Spieler', () => {
@@ -44,5 +48,38 @@ describe('erbenWinner (darunterliegende Karte gewinnt)', () => {
     const layer = [play(0, 'ass'), play(1, 'ass')]
     // Anspieler = 1 → 1 ist näher als 0
     expect(erbenWinner(layer, [0, 1], 1, 3)).toBe(1)
+  })
+})
+
+describe('erbenWinners (Regelvarianten)', () => {
+  // Doppelter Gleichstand: zwei 9er an der Spitze, zwei 7er darunter.
+  const doubleTie = [play(0, '9'), play(1, '7'), play(2, '7'), play(3, '9')]
+
+  it('lower: erbt nach unten und fällt bei vollem Gleichstand auf den Sitz zurück', () => {
+    // 9er vererben → 7er gleichauf → nächster zum Anspieler (0) unter {1,2} = 1
+    expect(erbenWinners(doubleTie, [0, 1, 2, 3], 0, 4, 'lower')).toEqual([1])
+  })
+
+  it('split: alle Spitzenspieler (die 9er) machen den Stich', () => {
+    expect(erbenWinners(doubleTie, [0, 1, 2, 3], 0, 4, 'split').sort()).toEqual([0, 3])
+  })
+
+  it('none: niemand macht den Stich', () => {
+    expect(erbenWinners(doubleTie, [0, 1, 2, 3], 0, 4, 'none')).toEqual([])
+  })
+
+  it('suit: höchste Farbe unter den Spitzenkarten gewinnt (Schellen > Rosen)', () => {
+    const layer = [playS(0, '9', 'rosen'), play(1, '7'), play(2, '7'), playS(3, '9', 'schellen')]
+    expect(erbenWinners(layer, [0, 1, 2, 3], 0, 4, 'suit')).toEqual([3])
+  })
+
+  it('suit-Reihenfolge: Rosen < Schilten < Eichel < Schellen', () => {
+    const layer = [
+      playS(0, '9', 'schilten'),
+      playS(1, '9', 'eichel'),
+      playS(2, '9', 'rosen'),
+    ]
+    // Eichel ist die höchste der drei Farben
+    expect(erbenWinners(layer, [0, 1, 2], 0, 3, 'suit')).toEqual([1])
   })
 })

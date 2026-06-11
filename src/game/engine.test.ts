@@ -10,8 +10,8 @@ import {
 } from './engine'
 import { legalBids } from './bidding'
 import { seatOrderFrom } from './seating'
-import { TOTAL_ROUNDS } from './constants'
-import type { GameConfig, GameState } from './types'
+import { DEFAULT_RULES, TOTAL_ROUNDS } from './constants'
+import type { ErbenResolution, GameConfig, GameState } from './types'
 
 const card = (suit: Suit, rank: Rank): Card => ({ suit, rank })
 
@@ -116,6 +116,50 @@ describe('Erben (1-Karten-Runde)', () => {
     expect(end.players[2].tricksWon).toBe(1)
     expect(end.completedTricks[0].resolvedBy).toBe('erben')
     expect(end.players.reduce((a, p) => a + p.tricksWon, 0)).toBe(1)
+  })
+})
+
+describe('Erben-Varianten (letzte Karte, gleiche Spitzenkarten)', () => {
+  // A:9 B:7 C:7 D:9, Anspieler 0 – die beiden 9er liegen gleichauf.
+  function doubleTieState(resolution: ErbenResolution): GameState {
+    const s = makePlayingState(
+      [
+        [card('rosen', '9')],
+        [card('schilten', '7')],
+        [card('eichel', '7')],
+        [card('schellen', '9')],
+      ],
+      0,
+    )
+    s.config.rules = { ...DEFAULT_RULES, erbenResolution: resolution }
+    return s
+  }
+
+  it('lower: 9er vererben, 7er gleichauf → der dem Anspieler nächste 7er-Spieler (1)', () => {
+    const end = autoPlayTricks(doubleTieState('lower'))
+    expect(end.completedTricks[0].winners).toEqual([1])
+    expect(end.players[1].tricksWon).toBe(1)
+    expect(end.completedTricks[0].resolvedBy).toBe('erben')
+  })
+
+  it('split: beide 9er-Spieler machen je einen Stich (Σ > Kartenzahl gewollt)', () => {
+    const end = autoPlayTricks(doubleTieState('split'))
+    expect([...end.completedTricks[0].winners].sort()).toEqual([0, 3])
+    expect(end.players[0].tricksWon).toBe(1)
+    expect(end.players[3].tricksWon).toBe(1)
+    expect(end.players.reduce((a, p) => a + p.tricksWon, 0)).toBe(2)
+  })
+
+  it('none: niemand macht den Stich (Σ < Kartenzahl gewollt)', () => {
+    const end = autoPlayTricks(doubleTieState('none'))
+    expect(end.completedTricks[0].winners).toEqual([])
+    expect(end.players.reduce((a, p) => a + p.tricksWon, 0)).toBe(0)
+  })
+
+  it('suit: höchste Farbe unter den 9ern gewinnt (Schellen schlägt Rosen)', () => {
+    const end = autoPlayTricks(doubleTieState('suit'))
+    expect(end.completedTricks[0].winners).toEqual([3])
+    expect(end.players[3].tricksWon).toBe(1)
   })
 })
 

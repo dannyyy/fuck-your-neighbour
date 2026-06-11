@@ -40,6 +40,7 @@ export function buildView(state: GameState, playerId: number): PlayerView {
     handSizes: state.players.map((p) => p.hand.length),
     leaderForRound: nextSeat(state.dealer, n),
     dealer: state.dealer,
+    erbenResolution: state.config.rules?.erbenResolution ?? 'lower',
     playedCards,
     currentLayerPlays: state.trick ? state.trick.currentLayer.slice() : [],
     contenders: state.trick ? state.trick.contenders.slice() : [],

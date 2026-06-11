@@ -1,7 +1,7 @@
 import type { Card } from '../game/cards'
 import { seatOrderFrom } from '../game/seating'
-import { erbenWinner, topContenders } from '../game/trick'
-import type { PlayedCard } from '../game/types'
+import { erbenWinners, topContenders } from '../game/trick'
+import type { ErbenResolution, PlayedCard } from '../game/types'
 import { chooseTactical } from './policy'
 
 /**
@@ -18,6 +18,7 @@ export function simulateRoundTricks(
   leader: number,
   numPlayers: number,
   targets: number[],
+  resolution: ErbenResolution = 'lower',
 ): number[] {
   const tricks = new Array<number>(numPlayers).fill(0)
   const h = hands.map((x) => x.slice())
@@ -27,7 +28,7 @@ export function simulateRoundTricks(
   while (h.some((x) => x.length > 0)) {
     let contenders = seatOrderFrom(curLeader, numPlayers).filter((id) => h[id].length > 0)
     const layers: PlayedCard[][] = []
-    let winner = curLeader
+    let winners = [curLeader]
     let credit = 1
 
     for (;;) {
@@ -48,7 +49,7 @@ export function simulateRoundTricks(
       const tied = topContenders(layer, contenders)
       const handsEmpty = h.every((x) => x.length === 0)
       if (tied.length === 1) {
-        winner = tied[0]
+        winners = [tied[0]]
         credit = layers.length
         break
       }
@@ -56,13 +57,15 @@ export function simulateRoundTricks(
         contenders = tied
         continue
       }
-      winner = erbenWinner(layer, contenders, curLeader, numPlayers)
+      winners = erbenWinners(layer, contenders, curLeader, numPlayers, resolution)
       credit = layers.length
       break
     }
 
-    tricks[winner] += credit
-    curLeader = winner
+    for (const w of winners) tricks[w] += credit
+    // Nächster Anspieler: der Einzelsieger. Erben (mehrere/keine Gewinner) tritt nur
+    // auf der letzten Karte auf, danach folgt kein weiterer Stich – Fallback genügt.
+    curLeader = winners[0] ?? curLeader
     if (++guard > 10000) break
   }
 

@@ -1,6 +1,6 @@
-import { rankStrength } from './cards'
+import { rankStrength, suitStrength } from './cards'
 import { seatOrderFrom } from './seating'
-import type { PlayedCard } from './types'
+import type { ErbenResolution, PlayedCard } from './types'
 
 /**
  * Wer hat unter den Wettkämpfern (`contenders`) in dieser Lage den höchsten Rang?
@@ -47,4 +47,39 @@ export function erbenWinner(
     if (tied.has(seat)) return seat
   }
   return leader
+}
+
+/**
+ * Auflösung des Gleichstands auf der letzten Karte (Erben) – je nach Regelvariante.
+ * Gibt die Liste der Stichgewinner zurück: genau einer (`lower`, `suit`), mehrere
+ * (`split`) oder keiner (`none`). Jeder Gewinner erhält die volle Stich-Gutschrift.
+ */
+export function erbenWinners(
+  layerCards: PlayedCard[],
+  contenders: number[],
+  leader: number,
+  numPlayers: number,
+  resolution: ErbenResolution,
+): number[] {
+  switch (resolution) {
+    case 'split':
+      // Alle gleichauf an der Spitze liegenden Spieler machen den Stich.
+      return topContenders(layerCards, contenders)
+    case 'none':
+      // Niemand macht den Stich.
+      return []
+    case 'suit': {
+      // Höchste Kartenfarbe unter den Spitzenkarten entscheidet (Farben sind eindeutig).
+      const tied = new Set(topContenders(layerCards, contenders))
+      const cards = layerCards.filter((pc) => tied.has(pc.playerId))
+      let winner = cards[0]
+      for (const pc of cards) {
+        if (suitStrength(pc.card.suit) > suitStrength(winner.card.suit)) winner = pc
+      }
+      return [winner.playerId]
+    }
+    case 'lower':
+    default:
+      return [erbenWinner(layerCards, contenders, leader, numPlayers)]
+  }
 }

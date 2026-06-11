@@ -4,7 +4,7 @@ import { ROUND_CARD_COUNTS, TOTAL_ROUNDS } from './constants'
 import { roundScore } from './scoring'
 import { makeRng, shuffleInPlace, type Rng } from './rng'
 import { nextSeat, seatOrderFrom } from './seating'
-import { erbenWinner, topContenders } from './trick'
+import { erbenWinners, topContenders } from './trick'
 import type {
   GameConfig,
   GameState,
@@ -165,7 +165,7 @@ function resolveLayer(state: GameState): void {
   const handsEmpty = state.players.every((p) => p.hand.length === 0)
 
   if (tiedTop.length === 1) {
-    finalizeTrick(state, tiedTop[0], trick.layers.length, 'high')
+    finalizeTrick(state, [tiedTop[0]], trick.layers.length, 'high')
     return
   }
 
@@ -180,23 +180,24 @@ function resolveLayer(state: GameState): void {
     return
   }
 
-  // Letzte Karte + Gleichstand → Erben.
-  const winner = erbenWinner(trick.currentLayer, trick.contenders, trick.leader, n)
-  finalizeTrick(state, winner, trick.layers.length, 'erben')
+  // Letzte Karte + Gleichstand → Erben (Auflösung je nach Regelvariante).
+  const resolution = state.config.rules?.erbenResolution ?? 'lower'
+  const winners = erbenWinners(trick.currentLayer, trick.contenders, trick.leader, n, resolution)
+  finalizeTrick(state, winners, trick.layers.length, 'erben')
 }
 
 function finalizeTrick(
   state: GameState,
-  winner: number,
+  winners: number[],
   credit: number,
   resolvedBy: 'high' | 'erben',
 ): void {
   const trick = state.trick!
-  state.players[winner].tricksWon += credit
+  for (const w of winners) state.players[w].tricksWon += credit
   state.completedTricks.push({
     leader: trick.leader,
     layers: trick.layers,
-    winner,
+    winners,
     credit,
     resolvedBy,
   })
@@ -206,7 +207,9 @@ function finalizeTrick(
   if (handsEmpty) {
     endRound(state)
   } else {
-    startTrick(state, winner) // Stichgewinner spielt an
+    // Nur der reguläre Einzelsieger spielt an; Erben tritt ausschliesslich auf
+    // der letzten Karte auf, danach folgt kein weiterer Stich mehr.
+    startTrick(state, winners[0])
   }
 }
 

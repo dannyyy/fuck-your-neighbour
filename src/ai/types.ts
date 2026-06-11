@@ -1,6 +1,6 @@
 import type { Card } from '../game/cards'
 import type { Rng } from '../game/rng'
-import type { Difficulty, PlayedCard } from '../game/types'
+import type { Difficulty, ErbenResolution, PlayedCard } from '../game/types'
 
 /**
  * Was ein Spieler legal sehen darf. Die KI trifft Entscheidungen NUR auf Basis
@@ -23,6 +23,8 @@ export interface PlayerView {
   /** Erster Anspieler der Runde (rechts des Gebers). */
   leaderForRound: number
   dealer: number
+  /** Aktive Erben-Variante – damit die Rollout-Simulation regeltreu rechnet. */
+  erbenResolution: ErbenResolution
   /** Alle in dieser Runde bereits gespielten Karten (öffentliches Gedächtnis). */
   playedCards: Card[]
   /** Karten der aktuell laufenden Lage (zur Bestimmung „zu schlagende Karte“). */

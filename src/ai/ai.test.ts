@@ -27,6 +27,7 @@ function baseOneCardView(visible: Record<number, Card>): PlayerView {
     handSizes: [1, 1, 1],
     leaderForRound: 1,
     dealer: 2,
+    erbenResolution: 'lower',
     playedCards: [],
     currentLayerPlays: [],
     contenders: [],

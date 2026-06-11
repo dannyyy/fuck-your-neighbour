@@ -33,6 +33,22 @@ export function rankStrength(rank: Rank): number {
   return STRENGTH[rank]
 }
 
+/**
+ * Farbstärke – NUR für die optionale Erben-Variante „Kartenfarbe entscheidet“.
+ * Reihenfolge (Nutzer-Vorgabe, tief → hoch): Rosen < Schilten < Eichel < Schellen.
+ * Im normalen Spiel haben Farben keinen Wert (kein Farbzwang).
+ */
+const SUIT_STRENGTH: Record<Suit, number> = {
+  rosen: 0,
+  schilten: 1,
+  eichel: 2,
+  schellen: 3,
+}
+
+export function suitStrength(suit: Suit): number {
+  return SUIT_STRENGTH[suit]
+}
+
 /** Eindeutige ID einer Karte, z. B. "schellen-ass". */
 export function cardId(card: Card): string {
   return `${card.suit}-${card.rank}`

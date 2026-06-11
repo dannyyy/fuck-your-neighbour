@@ -50,7 +50,13 @@ export function makeStrategy(difficulty: Difficulty): Ai {
     const counts: number[] = []
     for (let i = 0; i < samples; i++) {
       const hands = sampleHands(view, rng)
-      const tricks = simulateRoundTricks(hands, view.leaderForRound, view.numPlayers, targets)
+      const tricks = simulateRoundTricks(
+        hands,
+        view.leaderForRound,
+        view.numPlayers,
+        targets,
+        view.erbenResolution,
+      )
       counts.push(tricks[view.playerId])
     }
 

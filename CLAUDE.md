@@ -64,13 +64,21 @@ downward**: `ui → state → ai → game`. The `game` engine never imports Reac
   (`hitScore` / `missPenalty`); the constants are only defaults.
 - **Stechen / multi-credit**: a tie replays a layer for everyone; the eventual winner is
   credited one trick *per layer consumed*, so **Σ tricks in a round always equals the card
-  count** (an invariant asserted in `engine.test.ts`). On the last card a tie is resolved by
-  the next-lower card ("Erben", `trick.ts`).
+  count** (an invariant asserted in `engine.test.ts`) — this holds for the default `lower`
+  and `suit` Erben variants, but `split`/`none` deliberately break it (see below).
+- **Erben** (tie on the last card, no card left to stechen): resolved by
+  `erbenWinners` (`trick.ts`) and configurable via `GameConfig.rules.erbenResolution`
+  (`ErbenResolution`): `lower` (default — the next-lower card inherits, falling back to the
+  seat nearest the leader on a full tie), `split` (every tied top player wins the trick),
+  `none` (nobody wins it), or `suit` (highest suit decides: rosen < schilten < eichel <
+  schellen). `TrickRecord.winners` is therefore a list — one winner normally, several for
+  `split`, none for `none`.
 - **Bidding constraints** (`game/bidding.ts`): the dealer bids last and may not make the
   sum of bids equal the card count (hook rule); nobody may bid 0 twice in a row; the hook
   rule wins if the two constraints conflict. The no-double-zero rule never applies in the
   1-card round and can be toggled off via `GameConfig.rules.doubleZeroRule`.
 - The engine is **rule-configurable** via the optional `GameConfig.rules` (`GameRules` in
-  `game/types.ts`, defaults in `DEFAULT_RULES`): `doubleZeroRule`, `hitScore`, `missPenalty`.
+  `game/types.ts`, defaults in `DEFAULT_RULES`): `doubleZeroRule`, `hitScore`, `missPenalty`,
+  `erbenResolution`.
   Engine code reads these instead of the bare constants. Add further variants here rather
   than hard-coding them into the UI.

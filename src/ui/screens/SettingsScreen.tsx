@@ -1,8 +1,15 @@
 import { motion } from 'framer-motion'
 import { DEFAULT_RULES } from '../../game/constants'
-import type { GameRules } from '../../game/types'
+import type { ErbenResolution, GameRules } from '../../game/types'
 import { T } from '../../i18n/de'
 import { useStore } from '../../state/store'
+
+const ERBEN_OPTIONS: { value: ErbenResolution; label: string; hint: string }[] = [
+  { value: 'lower', label: T.erbenLower, hint: T.erbenLowerHint },
+  { value: 'split', label: T.erbenSplit, hint: T.erbenSplitHint },
+  { value: 'none', label: T.erbenNone, hint: T.erbenNoneHint },
+  { value: 'suit', label: T.erbenSuit, hint: T.erbenSuitHint },
+]
 
 /**
  * Einstellungsmenü (vom Startbildschirm). Änderungen werden sofort gespeichert
@@ -60,6 +67,33 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
               onChange={(v) => update({ missPenalty: v })}
             />
           </Row>
+
+          <div className="space-y-2 border-t border-gold-400/15 pt-4">
+            <div>
+              <div className="font-display text-base text-gold-200">{T.ruleErben}</div>
+              <div className="text-[11px] text-gold-200/55">{T.ruleErbenHint}</div>
+            </div>
+            <div className="grid gap-1.5">
+              {ERBEN_OPTIONS.map((opt) => {
+                const active = rules.erbenResolution === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => update({ erbenResolution: opt.value })}
+                    aria-pressed={active}
+                    className={`rounded-xl px-3 py-2 text-left transition ${
+                      active ? 'bg-gold-400 text-felt-950' : 'glass text-gold-200/80'
+                    }`}
+                  >
+                    <div className="font-display text-sm font-600">{opt.label}</div>
+                    <div className={`text-[11px] ${active ? 'text-felt-950/70' : 'text-gold-200/55'}`}>
+                      {opt.hint}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
           <button
             onClick={() => setRules({ ...DEFAULT_RULES })}

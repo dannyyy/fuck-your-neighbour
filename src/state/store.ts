@@ -19,7 +19,10 @@ const NAMES = ['Du', 'Lena', 'Marco', 'Sven', 'Nadia', 'Reto']
 export type Screen = 'start' | 'game'
 
 export interface TrickFlash {
-  winnerId: number
+  /** Hervorzuhebender Gewinner – null, wenn der Stich niemandem zufällt (Erben-Variante `none`). */
+  winnerId: number | null
+  /** Weitere Gewinner bei der Erben-Variante `split` (alle Gleichstands-Spieler). */
+  winnerIds: number[]
   cards: PlayedCard[]
   resolvedBy: 'high' | 'erben'
 }
@@ -60,7 +63,12 @@ async function applyState(next: GameState, prev: GameState): Promise<void> {
     const last = next.completedTricks[next.completedTricks.length - 1]
     const lastLayer = last.layers[last.layers.length - 1]
     useStore.setState({
-      trickFlash: { winnerId: last.winner, cards: lastLayer, resolvedBy: last.resolvedBy },
+      trickFlash: {
+        winnerId: last.winners[0] ?? null,
+        winnerIds: last.winners,
+        cards: lastLayer,
+        resolvedBy: last.resolvedBy,
+      },
     })
     playSfx('trickWin')
     // Letzter Stich der Runde länger zeigen – die Wertung (RoundSummary) wird in der

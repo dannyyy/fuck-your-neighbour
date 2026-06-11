@@ -28,7 +28,7 @@ export function TrickReview({ onClose }: { onClose: () => void }) {
 
         <div className="space-y-4 overflow-y-auto px-4 py-4">
           {tricks.map((trick, idx) => {
-            const winner = game.players[trick.winner]
+            const winnerNames = trick.winners.map((id) => game.players[id].name).join(' & ')
             return (
               <div key={idx} className="rounded-2xl bg-felt-950/30 p-3">
                 <div className="mb-2 flex items-center justify-between text-[11px]">
@@ -39,8 +39,8 @@ export function TrickReview({ onClose }: { onClose: () => void }) {
                     )}
                   </span>
                   <span className="text-gold-300">
-                    {winner.name} {T.wonBy}
-                    {trick.credit > 1 && (
+                    {trick.winners.length === 0 ? T.noTrickWinner : `${winnerNames} ${T.wonBy}`}
+                    {trick.credit > 1 && trick.winners.length > 0 && (
                       <span className="ml-1 rounded-full bg-gold-400/20 px-1.5 text-gold-200">
                         ×{trick.credit}
                       </span>
@@ -52,7 +52,7 @@ export function TrickReview({ onClose }: { onClose: () => void }) {
                   {trick.layers.map((layer, li) => (
                     <div key={li} className="flex flex-wrap items-end gap-2">
                       {layer.map((pc) => {
-                        const isWinner = pc.playerId === trick.winner
+                        const isWinner = trick.winners.includes(pc.playerId)
                         return (
                           <div
                             key={`${pc.playerId}-${pc.card.suit}-${pc.card.rank}`}

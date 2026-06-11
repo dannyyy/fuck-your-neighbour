@@ -5,6 +5,20 @@ export type Difficulty = 'leicht' | 'mittel' | 'schwer'
 export type Phase = 'bidding' | 'playing' | 'roundEnd' | 'gameEnd'
 
 /**
+ * Wie wird ein Gleichstand der Spitzenkarten auf der letzten Karte aufgelöst
+ * („Erben“ – es gibt keine Karte mehr zum Stechen)?
+ *   - `lower`: die darunterliegende Karte erbt den Stich; bleibt alles gleich,
+ *     gewinnt der dem Anspieler nächste Spieler. (Bisheriges Verhalten.)
+ *   - `split`: alle gleichauf liegenden Spieler machen den Stich.
+ *   - `none`:  keiner der gleichauf liegenden Spieler macht den Stich.
+ *   - `suit`:  die Kartenfarbe entscheidet (Rosen < Schilten < Eichel < Schellen).
+ *
+ * Achtung: `split` und `none` durchbrechen bewusst die Invariante
+ * „Σ Stiche = Kartenzahl“ – das ist bei diesen Varianten gewollt.
+ */
+export type ErbenResolution = 'lower' | 'split' | 'none' | 'suit'
+
+/**
  * Konfigurierbare Regelvarianten. Die Engine liest diese Werte statt fester
  * Konstanten, damit sich Regeln im Einstellungsmenü an-/abschalten lassen.
  */
@@ -15,6 +29,8 @@ export interface GameRules {
   hitScore: number
   /** Strafe pro Stich Abweichung (Standard 5). */
   missPenalty: number
+  /** Auflösung des Gleichstands auf der letzten Karte (Standard `lower`). */
+  erbenResolution: ErbenResolution
 }
 
 export interface GameConfig {
@@ -62,7 +78,11 @@ export type TrickResolution = 'high' | 'erben'
 export interface TrickRecord {
   leader: number
   layers: PlayedCard[][]
-  winner: number
+  /**
+   * Stichgewinner. Normalfall genau einer; bei der Erben-Variante `split` mehrere,
+   * bei `none` keiner. Jeder Gewinner erhält `credit` Stiche gutgeschrieben.
+   */
+  winners: number[]
   credit: number
   resolvedBy: TrickResolution
 }
