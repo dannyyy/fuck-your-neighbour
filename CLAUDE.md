@@ -47,7 +47,8 @@ downward**: `ui → state → ai → game`. The `game` engine never imports Reac
   watchability and stops when it's the human's turn or the round/game ends. When a trick
   completes, it sets `trickFlash` so the UI can show the finished trick before the engine's
   already-started next trick renders. Audio (`sound.ts`) is synthesized via Web Audio — no
-  asset files.
+  asset files. Player-facing options (sound/music + the configurable rule set) are persisted
+  to `localStorage` via `src/state/settings.ts` and fed into the game as `GameConfig.rules`.
 
 - **`src/ui/`** — React + Tailwind v4 + Framer Motion. Components read `game` from the store
   and import engine selectors (`legalBids`, `legalPlays`, `currentActor`) directly. German
@@ -59,13 +60,17 @@ downward**: `ui → state → ai → game`. The `game` engine never imports Reac
   `6 < 7 < 8 < banner(10) < under < ober < koenig < 9 < ass`. The **9 is second-highest**;
   the 10/Banner sits below the Under. Suits have **no** value (no follow-suit) — only rank wins.
 - **Scoring** (`game/scoring.ts`, overrides the PDF): exact bid → **+10 flat**; otherwise
-  **−5 × |bid − tricks|**.
+  **−5 × |bid − tricks|**. The +10 / −5 values are configurable via `GameConfig.rules`
+  (`hitScore` / `missPenalty`); the constants are only defaults.
 - **Stechen / multi-credit**: a tie replays a layer for everyone; the eventual winner is
   credited one trick *per layer consumed*, so **Σ tricks in a round always equals the card
   count** (an invariant asserted in `engine.test.ts`). On the last card a tie is resolved by
   the next-lower card ("Erben", `trick.ts`).
 - **Bidding constraints** (`game/bidding.ts`): the dealer bids last and may not make the
   sum of bids equal the card count (hook rule); nobody may bid 0 twice in a row; the hook
-  rule wins if the two constraints conflict.
-- The engine is built to be **rule-configurable** — additional rule variants are expected and
-  should extend `GameConfig`/the engine rather than being hard-coded into the UI.
+  rule wins if the two constraints conflict. The no-double-zero rule never applies in the
+  1-card round and can be toggled off via `GameConfig.rules.doubleZeroRule`.
+- The engine is **rule-configurable** via the optional `GameConfig.rules` (`GameRules` in
+  `game/types.ts`, defaults in `DEFAULT_RULES`): `doubleZeroRule`, `hitScore`, `missPenalty`.
+  Engine code reads these instead of the bare constants. Add further variants here rather
+  than hard-coding them into the UI.
