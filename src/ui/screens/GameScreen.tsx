@@ -117,8 +117,9 @@ export function GameScreen({ onMenu, onRules }: { onMenu: () => void; onRules: (
         />
       </div>
 
-      {game.phase === 'roundEnd' && <RoundSummary />}
-      {game.phase === 'gameEnd' && <GameOver onMenu={onMenu} />}
+      {/* Wertung/Game-Over erst zeigen, wenn der letzte Stich fertig eingeblendet ist. */}
+      {game.phase === 'roundEnd' && !flash && <RoundSummary />}
+      {game.phase === 'gameEnd' && !flash && <GameOver onMenu={onMenu} />}
       {showScores && <ScoreBoard onClose={() => setShowScores(false)} />}
     </div>
   )

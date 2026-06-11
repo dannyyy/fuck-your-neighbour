@@ -9,6 +9,8 @@ import { playSfx, setMusicEnabled, setSoundEnabled, unlockAudio } from './sound'
 const AI_BID_DELAY = 720
 const AI_PLAY_DELAY = 580
 const TRICK_FLASH_MS = 1300
+/** Endet mit dem Stich auch die Runde, bleibt er länger stehen, bevor die Wertung erscheint. */
+const ROUND_END_FLASH_MS = 2200
 
 /** Namenspool für KI-Gegner (Index 0 = Mensch „Du“). */
 const NAMES = ['Du', 'Lena', 'Marco', 'Sven', 'Nadia', 'Reto']
@@ -62,7 +64,10 @@ async function applyState(next: GameState, prev: GameState): Promise<void> {
       trickFlash: { winnerId: last.winner, cards: lastLayer, resolvedBy: last.resolvedBy },
     })
     playSfx('trickWin')
-    await delay(TRICK_FLASH_MS)
+    // Letzter Stich der Runde länger zeigen – die Wertung (RoundSummary) wird in der
+    // UI erst eingeblendet, wenn der trickFlash wieder verschwindet.
+    const roundEnding = next.phase === 'roundEnd' || next.phase === 'gameEnd'
+    await delay(roundEnding ? ROUND_END_FLASH_MS : TRICK_FLASH_MS)
     useStore.setState({ trickFlash: null })
   }
 
