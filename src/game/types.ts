@@ -4,6 +4,19 @@ export type Difficulty = 'leicht' | 'mittel' | 'schwer'
 
 export type Phase = 'bidding' | 'playing' | 'roundEnd' | 'gameEnd'
 
+/**
+ * Konfigurierbare Regelvarianten. Die Engine liest diese Werte statt fester
+ * Konstanten, damit sich Regeln im Einstellungsmenü an-/abschalten lassen.
+ */
+export interface GameRules {
+  /** „Niemand darf zweimal in Folge 0 ansagen“ (gilt nie in der 1-Karten-Runde). */
+  doubleZeroRule: boolean
+  /** Punkte bei exakt getroffener Ansage (Standard 10). */
+  hitScore: number
+  /** Strafe pro Stich Abweichung (Standard 5). */
+  missPenalty: number
+}
+
 export interface GameConfig {
   numPlayers: number
   difficulty: Difficulty
@@ -12,6 +25,8 @@ export interface GameConfig {
   /** Index des menschlichen Spielers (üblicherweise 0). */
   humanIndex: number
   seed: number
+  /** Aktive Regelvarianten (optional – fehlt sie, gelten die Standardwerte). */
+  rules?: GameRules
 }
 
 export interface PlayedCard {

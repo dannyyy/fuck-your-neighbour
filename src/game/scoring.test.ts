@@ -22,4 +22,11 @@ describe('roundScore (Treffer +10 pauschal, Fehler −5/Abweichung)', () => {
     expect(roundScore(6, 6)).toBe(10)
     expect(roundScore(1, 1)).toBe(10)
   })
+
+  it('konfigurierbare Punktewerte (Treffer/Strafe)', () => {
+    // Treffer +20, Strafe 3 pro Stich.
+    expect(roundScore(3, 3, 20, 3)).toBe(20)
+    expect(roundScore(2, 0, 20, 3)).toBe(-6)
+    expect(roundScore(1, 3, 20, 3)).toBe(-6)
+  })
 })

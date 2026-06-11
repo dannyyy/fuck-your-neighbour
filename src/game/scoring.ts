@@ -6,8 +6,16 @@ import { HIT_SCORE, MISS_PENALTY } from './constants'
  *   daneben               → −5 pro Stich Abweichung
  *
  * Beispiele: 3/3 → +10, 0/0 → +10, 2/0 → 2×(−5) = −10.
+ *
+ * Punktewerte sind konfigurierbar (Einstellungsmenü); ohne Angabe gelten die
+ * Standardwerte.
  */
-export function roundScore(bid: number, tricksWon: number): number {
-  if (bid === tricksWon) return HIT_SCORE
-  return -MISS_PENALTY * Math.abs(bid - tricksWon)
+export function roundScore(
+  bid: number,
+  tricksWon: number,
+  hitScore: number = HIT_SCORE,
+  missPenalty: number = MISS_PENALTY,
+): number {
+  if (bid === tricksWon) return hitScore
+  return -missPenalty * Math.abs(bid - tricksWon)
 }

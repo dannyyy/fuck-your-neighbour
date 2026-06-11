@@ -11,6 +11,11 @@ export function TrickArea() {
 
   const plays: PlayedCard[] = flash ? flash.cards : game.trick?.currentLayer ?? []
   const winnerId = flash?.winnerId ?? null
+  // Beim Stechen/„Duell“ kämpfen nur die Gleichstands-Spieler um den Stich – die
+  // Abwürfe der übrigen werden abgeblendet, damit klar ist, wer noch im Rennen ist.
+  const isDuel = !flash && !!game.trick?.isStechen
+  const contenders = game.trick?.contenders ?? []
+  const isDimmed = (playerId: number) => isDuel && !contenders.includes(playerId)
   const banner =
     flash?.resolvedBy === 'erben'
       ? T.erben
@@ -45,14 +50,15 @@ export function TrickArea() {
         <AnimatePresence mode="popLayout">
           {plays.map((pc) => {
             const isWinner = winnerId === pc.playerId
+            const dimmed = isDimmed(pc.playerId)
             return (
               <motion.div
                 key={`${pc.playerId}-${pc.card.suit}-${pc.card.rank}`}
                 layout
                 initial={{ opacity: 0, scale: 0.6, y: 24 }}
                 animate={{
-                  opacity: 1,
-                  scale: isWinner ? 1.08 : 1,
+                  opacity: dimmed ? 0.55 : 1,
+                  scale: isWinner ? 1.08 : dimmed ? 0.88 : 1,
                   y: 0,
                 }}
                 exit={{ opacity: 0, scale: 0.6 }}
@@ -66,7 +72,11 @@ export function TrickArea() {
                 >
                   {game.players[pc.playerId].name}
                 </span>
-                <PlayingCard card={pc.card} width={58} highlight={isWinner ? 'winner' : 'none'} />
+                <PlayingCard
+                  card={pc.card}
+                  width={58}
+                  highlight={isWinner ? 'winner' : dimmed ? 'dim' : 'none'}
+                />
               </motion.div>
             )
           })}
