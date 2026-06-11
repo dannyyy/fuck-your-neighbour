@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isLegalBid, legalBids } from './bidding'
-import type { GameConfig, GameState, PlayerState } from './types'
+import type { GameConfig, GameRules, GameState, PlayerState } from './types'
 
 function makeBiddingState(opts: {
   n: number
@@ -8,8 +8,9 @@ function makeBiddingState(opts: {
   dealer: number
   bids?: (number | null)[]
   lastRoundBids?: (number | null)[]
+  rules?: GameRules
 }): GameState {
-  const { n, cardCount, dealer, bids = [], lastRoundBids = [] } = opts
+  const { n, cardCount, dealer, bids = [], lastRoundBids = [], rules } = opts
   const players: PlayerState[] = Array.from({ length: n }, (_, id) => ({
     id,
     name: `P${id}`,
@@ -26,6 +27,7 @@ function makeBiddingState(opts: {
     playerNames: players.map((p) => p.name),
     humanIndex: 0,
     seed: 1,
+    rules,
   }
   return {
     config,
@@ -98,6 +100,32 @@ describe('legalBids – „nicht zweimal in Folge 0“', () => {
       lastRoundBids: [2, null, null, null],
     })
     expect(legalBids(state, 0)).toContain(0)
+  })
+})
+
+describe('legalBids – „nicht zweimal in Folge 0“ greift nicht in der 1-Karten-Runde', () => {
+  it('erlaubt 0, obwohl der Spieler in der Vorrunde 0 hatte (nur 1 Karte)', () => {
+    const state = makeBiddingState({
+      n: 4,
+      cardCount: 1,
+      dealer: 3,
+      lastRoundBids: [0, null, null, null],
+    })
+    // Spieler 0 ist nicht der Geber → keine Hook-Beschränkung; 0-zweimal greift nicht.
+    expect(legalBids(state, 0)).toEqual([0, 1])
+  })
+})
+
+describe('legalBids – Regel „nicht zweimal 0“ abschaltbar', () => {
+  it('erlaubt 0 trotz Vorrunde-0, wenn die Regel deaktiviert ist', () => {
+    const state = makeBiddingState({
+      n: 4,
+      cardCount: 3,
+      dealer: 3,
+      lastRoundBids: [0, null, null, null],
+      rules: { doubleZeroRule: false, hitScore: 10, missPenalty: 5 },
+    })
+    expect(legalBids(state, 0)).toEqual([0, 1, 2, 3])
   })
 })
 

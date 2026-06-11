@@ -7,9 +7,10 @@ import type { GameState } from './types'
  *  - Basis: 0 … Kartenzahl.
  *  - Letzter Bieter (= Geber): die Summe aller Ansagen darf NICHT der Kartenzahl
  *    entsprechen → der Wert `Kartenzahl − Σ(andere Ansagen)` ist verboten (Hook-Regel).
- *  - Niemand darf zweimal in Folge 0 ansagen.
- *  - Konflikt-Auflösung: Würden Hook-Regel + „kein 0-zweimal“ keinen Wert übriglassen
- *    (nur im 1-Karten-Fall möglich), hat die Hook-Regel Vorrang und 0 wird wieder erlaubt.
+ *  - Niemand darf zweimal in Folge 0 ansagen (abschaltbar via `rules.doubleZeroRule`;
+ *    gilt ausserdem nie in der 1-Karten-Runde).
+ *  - Konflikt-Auflösung: Würden Hook-Regel + „kein 0-zweimal“ keinen Wert übriglassen,
+ *    hat die Hook-Regel Vorrang und 0 wird wieder erlaubt.
  */
 export function legalBids(state: GameState, playerId: number): number[] {
   const { cardCount } = state
@@ -26,7 +27,9 @@ export function legalBids(state: GameState, playerId: number): number[] {
     }
   }
 
-  if (state.players[playerId].lastRoundBid === 0) {
+  // „Kein 0-zweimal“ – nur wenn aktiviert und nicht in der 1-Karten-Runde.
+  const doubleZeroRule = state.config.rules?.doubleZeroRule ?? true
+  if (doubleZeroRule && cardCount > 1 && state.players[playerId].lastRoundBid === 0) {
     const without0 = candidates.filter((v) => v !== 0)
     if (without0.length > 0) candidates = without0
     // sonst: Hook hat Vorrang → 0 bleibt erlaubt

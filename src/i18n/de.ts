@@ -82,4 +82,23 @@ export const T = {
   music: 'Musik',
   scoreboard: 'Punktetafel',
   you: 'Du',
+  // Stiche-Rückblick (nach der Runde)
+  reviewTricks: 'Stiche ansehen',
+  trickReview: 'Stiche der Runde',
+  trickNo: 'Stich',
+  wonBy: 'gewinnt',
+  close: 'Schliessen',
+  // Einstellungen
+  settings: 'Einstellungen',
+  settingsHint: 'Regeln anpassen – wird für spätere Partien gespeichert.',
+  ruleDoubleZero: 'Regel „nicht zweimal 0“',
+  ruleDoubleZeroHint: 'Niemand darf zweimal in Folge 0 ansagen (gilt nie bei 1 Karte).',
+  scoreHit: 'Punkte bei Treffer',
+  scoreHitHint: 'Exakt getroffene Ansage.',
+  scoreMiss: 'Strafe pro Stich daneben',
+  scoreMissHint: 'Abzug je Stich Abweichung.',
+  resetDefaults: 'Standard',
+  save: 'Speichern',
+  on: 'An',
+  off: 'Aus',
 } as const

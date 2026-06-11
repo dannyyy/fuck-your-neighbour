@@ -2,8 +2,9 @@ import { create } from 'zustand'
 import type { Card } from '../game/cards'
 import { createGame, currentActor, nextRound, placeBid, playCard } from '../game/engine'
 import { makeRng, randomSeed, type Rng } from '../game/rng'
-import type { Difficulty, GameState, PlayedCard } from '../game/types'
+import type { Difficulty, GameRules, GameState, PlayedCard } from '../game/types'
 import { buildView, createAi, type Ai } from '../ai'
+import { loadSettings, saveSettings, type PersistedSettings } from './settings'
 import { playSfx, setMusicEnabled, setSoundEnabled, unlockAudio } from './sound'
 
 const AI_BID_DELAY = 720
@@ -23,10 +24,7 @@ export interface TrickFlash {
   resolvedBy: 'high' | 'erben'
 }
 
-interface Settings {
-  sound: boolean
-  music: boolean
-}
+type Settings = PersistedSettings
 
 interface StoreState {
   screen: Screen
@@ -46,6 +44,7 @@ interface StoreState {
   backToMenu(): void
   toggleSound(): void
   toggleMusic(): void
+  setRules(rules: GameRules): void
 }
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
@@ -111,12 +110,15 @@ async function runAi(): Promise<void> {
   }
 }
 
+const initialSettings = loadSettings()
+setSoundEnabled(initialSettings.sound)
+
 export const useStore = create<StoreState>((set, get) => ({
   screen: 'start',
   game: null,
   ai: null,
   rng: null,
-  settings: { sound: true, music: false },
+  settings: initialSettings,
   trickFlash: null,
   thinking: null,
 
@@ -130,6 +132,7 @@ export const useStore = create<StoreState>((set, get) => ({
       playerNames,
       humanIndex: 0,
       seed,
+      rules: get().settings.rules,
     })
     set({
       screen: 'game',
@@ -179,12 +182,22 @@ export const useStore = create<StoreState>((set, get) => ({
   toggleSound() {
     const next = !get().settings.sound
     setSoundEnabled(next)
-    set((s) => ({ settings: { ...s.settings, sound: next } }))
+    const settings = { ...get().settings, sound: next }
+    saveSettings(settings)
+    set({ settings })
   },
 
   toggleMusic() {
     const next = !get().settings.music
     setMusicEnabled(next)
-    set((s) => ({ settings: { ...s.settings, music: next } }))
+    const settings = { ...get().settings, music: next }
+    saveSettings(settings)
+    set({ settings })
+  },
+
+  setRules(rules) {
+    const settings = { ...get().settings, rules }
+    saveSettings(settings)
+    set({ settings })
   },
 }))

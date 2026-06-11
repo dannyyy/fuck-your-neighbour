@@ -1,10 +1,13 @@
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import { T } from '../../i18n/de'
 import { useStore } from '../../state/store'
+import { TrickReview } from './TrickReview'
 
 export function RoundSummary() {
   const game = useStore((s) => s.game)!
   const continueRound = useStore((s) => s.continueRound)
+  const [showReview, setShowReview] = useState(false)
   const last = game.history[game.history.length - 1]
   if (!last) return null
 
@@ -54,13 +57,24 @@ export function RoundSummary() {
           })}
         </div>
 
-        <button
-          onClick={continueRound}
-          className="mt-5 w-full rounded-2xl bg-gold-400 py-3 font-display text-lg text-felt-950 shadow-lg active:scale-[0.98]"
-        >
-          {T.continue}
-        </button>
+        <div className="mt-5 flex gap-2">
+          <button
+            onClick={() => setShowReview(true)}
+            disabled={game.completedTricks.length === 0}
+            className="glass flex-1 rounded-2xl py-3 font-display text-base text-gold-200 disabled:opacity-40 active:scale-[0.98]"
+          >
+            {T.reviewTricks}
+          </button>
+          <button
+            onClick={continueRound}
+            className="flex-1 rounded-2xl bg-gold-400 py-3 font-display text-lg text-felt-950 shadow-lg active:scale-[0.98]"
+          >
+            {T.continue}
+          </button>
+        </div>
       </motion.div>
+
+      {showReview && <TrickReview onClose={() => setShowReview(false)} />}
     </Overlay>
   )
 }

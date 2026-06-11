@@ -8,7 +8,13 @@ import { SwissSuit } from '../cards/SwissSuit'
 const PLAYER_OPTIONS = [3, 4, 5, 6]
 const DIFFICULTIES: Difficulty[] = ['leicht', 'mittel', 'schwer']
 
-export function StartScreen({ onShowRules }: { onShowRules: () => void }) {
+export function StartScreen({
+  onShowRules,
+  onShowSettings,
+}: {
+  onShowRules: () => void
+  onShowSettings: () => void
+}) {
   const [numPlayers, setNumPlayers] = useState(4)
   const [difficulty, setDifficulty] = useState<Difficulty>('mittel')
   const startGame = useStore((s) => s.startGame)
@@ -104,6 +110,9 @@ export function StartScreen({ onShowRules }: { onShowRules: () => void }) {
           {T.start}
         </button>
         <div className="flex items-center gap-3">
+          <button onClick={onShowSettings} className="glass flex-1 rounded-xl py-3 text-sm text-gold-200">
+            {T.settings}
+          </button>
           <button onClick={onShowRules} className="glass flex-1 rounded-xl py-3 text-sm text-gold-200">
             {T.rules}
           </button>

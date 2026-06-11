@@ -215,7 +215,10 @@ function finalizeTrick(
 // ---------------------------------------------------------------------------
 
 function endRound(state: GameState): void {
-  const deltas = state.players.map((p) => roundScore(p.bid ?? 0, p.tricksWon))
+  const rules = state.config.rules
+  const deltas = state.players.map((p) =>
+    roundScore(p.bid ?? 0, p.tricksWon, rules?.hitScore, rules?.missPenalty),
+  )
   state.players.forEach((p, i) => {
     p.scoreTotal += deltas[i]
     p.lastRoundBid = p.bid

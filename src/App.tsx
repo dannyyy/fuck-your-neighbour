@@ -3,23 +3,29 @@ import { useState } from 'react'
 import { useStore } from './state/store'
 import { GameScreen } from './ui/screens/GameScreen'
 import { RulesScreen } from './ui/screens/RulesScreen'
+import { SettingsScreen } from './ui/screens/SettingsScreen'
 import { StartScreen } from './ui/screens/StartScreen'
 
 export default function App() {
   const screen = useStore((s) => s.screen)
   const backToMenu = useStore((s) => s.backToMenu)
   const [showRules, setShowRules] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   return (
     <div className="h-full">
       {screen === 'start' ? (
-        <StartScreen onShowRules={() => setShowRules(true)} />
+        <StartScreen
+          onShowRules={() => setShowRules(true)}
+          onShowSettings={() => setShowSettings(true)}
+        />
       ) : (
         <GameScreen onMenu={backToMenu} onRules={() => setShowRules(true)} />
       )}
 
       <AnimatePresence>
         {showRules && <RulesScreen onClose={() => setShowRules(false)} />}
+        {showSettings && <SettingsScreen onClose={() => setShowSettings(false)} />}
       </AnimatePresence>
     </div>
   )
