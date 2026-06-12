@@ -13,6 +13,7 @@ export const DEFAULT_RULES: GameRules = {
   doubleZeroRule: true,
   hitScore: HIT_SCORE,
   missPenalty: MISS_PENALTY,
+  lastCardTiebreak: 'seat',
 }
 
 export const MIN_PLAYERS = 3

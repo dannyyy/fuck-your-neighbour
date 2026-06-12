@@ -15,6 +15,12 @@ export interface GameRules {
   hitScore: number
   /** Strafe pro Stich Abweichung (Standard 5). */
   missPenalty: number
+  /**
+   * Letzter Stich (Erben), wenn auch die unterste Lage gleichrangig bleibt:
+   *   'seat' – der dem Anspieler nächste Spieler gewinnt (Standard).
+   *   'suit' – die höhere Farbe entscheidet (Rosen < Eichel < Schilten < Schellen).
+   */
+  lastCardTiebreak: 'seat' | 'suit'
 }
 
 export interface GameConfig {

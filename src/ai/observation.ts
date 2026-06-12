@@ -18,13 +18,20 @@ export function buildView(state: GameState, playerId: number): PlayerView {
     }
   }
 
+  // Im Duell/Stechen legen alle ihre Karte verdeckt: die laufende Lage ist erst
+  // sichtbar, wenn alle gelegt haben. Bis dahin kämpft die KI „blind“ – sie darf
+  // die bereits gelegten Karten dieser Lage weder sehen noch mitzählen.
+  const battleConcealed = !!state.trick?.isStechen
+
   const playedCards: Card[] = []
   for (const trick of state.completedTricks) {
     for (const layer of trick.layers) for (const pc of layer) playedCards.push(pc.card)
   }
   if (state.trick) {
     for (const layer of state.trick.layers) for (const pc of layer) playedCards.push(pc.card)
-    for (const pc of state.trick.currentLayer) playedCards.push(pc.card)
+    if (!battleConcealed) {
+      for (const pc of state.trick.currentLayer) playedCards.push(pc.card)
+    }
   }
 
   return {
@@ -41,7 +48,7 @@ export function buildView(state: GameState, playerId: number): PlayerView {
     leaderForRound: nextSeat(state.dealer, n),
     dealer: state.dealer,
     playedCards,
-    currentLayerPlays: state.trick ? state.trick.currentLayer.slice() : [],
+    currentLayerPlays: state.trick && !battleConcealed ? state.trick.currentLayer.slice() : [],
     contenders: state.trick ? state.trick.contenders.slice() : [],
     amContender: state.trick ? state.trick.contenders.includes(playerId) : false,
     myBid: me.bid,
