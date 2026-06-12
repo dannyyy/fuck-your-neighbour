@@ -47,7 +47,7 @@ downward**: `ui → state → ai → game`. The `game` engine never imports Reac
   watchability and stops when it's the human's turn or the round/game ends. When a trick
   completes, it sets `trickFlash` so the UI can show the finished trick before the engine's
   already-started next trick renders. Audio (`sound.ts`) is synthesized via Web Audio — no
-  asset files. Player-facing options (sound/music + the configurable rule set) are persisted
+  asset files. Player-facing options (sound + the configurable rule set) are persisted
   to `localStorage` via `src/state/settings.ts` and fed into the game as `GameConfig.rules`.
 
 - **`src/ui/`** — React + Tailwind v4 + Framer Motion. Components read `game` from the store

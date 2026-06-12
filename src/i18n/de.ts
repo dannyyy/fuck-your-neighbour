@@ -79,7 +79,6 @@ export const T = {
   playForeheadCard: 'Verdeckte Karte ausspielen',
   oneCardExplain: 'Du siehst alle Karten – nur deine eigene nicht.',
   sound: 'Sound',
-  music: 'Musik',
   scoreboard: 'Punktetafel',
   you: 'Du',
   // Stiche-Rückblick (nach der Runde)
