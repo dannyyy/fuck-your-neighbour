@@ -20,7 +20,6 @@ export function StartScreen({
   const startGame = useStore((s) => s.startGame)
   const settings = useStore((s) => s.settings)
   const toggleSound = useStore((s) => s.toggleSound)
-  const toggleMusic = useStore((s) => s.toggleMusic)
 
   const fade = {
     hidden: { opacity: 0, y: 18 },
@@ -117,7 +116,6 @@ export function StartScreen({
             {T.rules}
           </button>
           <Toggle label={T.sound} on={settings.sound} onClick={toggleSound} />
-          <Toggle label={T.music} on={settings.music} onClick={toggleMusic} />
         </div>
       </motion.div>
     </div>

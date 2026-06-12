@@ -6,7 +6,6 @@ export function Hud({ onMenu, onRules, onScores }: { onMenu: () => void; onRules
   const game = useStore((s) => s.game)
   const settings = useStore((s) => s.settings)
   const toggleSound = useStore((s) => s.toggleSound)
-  const toggleMusic = useStore((s) => s.toggleMusic)
   if (!game) return null
 
   return (
@@ -28,7 +27,6 @@ export function Hud({ onMenu, onRules, onScores }: { onMenu: () => void; onRules
       <div className="flex items-center gap-1">
         <IconBtn onClick={onScores} label={T.scoreboard}>≡</IconBtn>
         <IconBtn onClick={toggleSound} active={settings.sound} label={T.sound}>♪</IconBtn>
-        <IconBtn onClick={toggleMusic} active={settings.music} label={T.music}>♫</IconBtn>
         <IconBtn onClick={onRules} label={T.rules}>?</IconBtn>
       </div>
     </header>

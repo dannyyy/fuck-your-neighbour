@@ -2,19 +2,17 @@ import { DEFAULT_RULES } from '../game/constants'
 import type { GameRules } from '../game/types'
 
 /**
- * Im Browser (localStorage) dauerhaft gespeicherte Einstellungen – Sound/Musik
- * sowie die konfigurierbaren Regelvarianten. Werden beim Start geladen, sodass
- * eine spätere Partie dieselben Einstellungen vorfindet.
+ * Im Browser (localStorage) dauerhaft gespeicherte Einstellungen – Sound sowie
+ * die konfigurierbaren Regelvarianten. Werden beim Start geladen, sodass eine
+ * spätere Partie dieselben Einstellungen vorfindet.
  */
 export interface PersistedSettings {
   sound: boolean
-  music: boolean
   rules: GameRules
 }
 
 export const DEFAULT_SETTINGS: PersistedSettings = {
   sound: true,
-  music: false,
   rules: DEFAULT_RULES,
 }
 
@@ -29,7 +27,6 @@ export function loadSettings(): PersistedSettings {
     const parsed = JSON.parse(raw) as Partial<PersistedSettings>
     return {
       sound: parsed.sound ?? DEFAULT_SETTINGS.sound,
-      music: parsed.music ?? DEFAULT_SETTINGS.music,
       rules: { ...DEFAULT_RULES, ...(parsed.rules ?? {}) },
     }
   } catch {

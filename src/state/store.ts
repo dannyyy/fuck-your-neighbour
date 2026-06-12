@@ -5,7 +5,7 @@ import { makeRng, randomSeed, type Rng } from '../game/rng'
 import type { Difficulty, GameRules, GameState, PlayedCard } from '../game/types'
 import { buildView, createAi, type Ai } from '../ai'
 import { loadSettings, saveSettings, type PersistedSettings } from './settings'
-import { playSfx, setMusicEnabled, setSoundEnabled, unlockAudio } from './sound'
+import { playSfx, setSoundEnabled, unlockAudio } from './sound'
 
 const AI_BID_DELAY = 720
 const AI_PLAY_DELAY = 580
@@ -43,7 +43,6 @@ interface StoreState {
   continueRound(): void
   backToMenu(): void
   toggleSound(): void
-  toggleMusic(): void
   setRules(rules: GameRules): void
 }
 
@@ -183,14 +182,6 @@ export const useStore = create<StoreState>((set, get) => ({
     const next = !get().settings.sound
     setSoundEnabled(next)
     const settings = { ...get().settings, sound: next }
-    saveSettings(settings)
-    set({ settings })
-  },
-
-  toggleMusic() {
-    const next = !get().settings.music
-    setMusicEnabled(next)
-    const settings = { ...get().settings, music: next }
     saveSettings(settings)
     set({ settings })
   },
