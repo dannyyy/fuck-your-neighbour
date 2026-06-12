@@ -29,15 +29,18 @@ export function simulateRoundTricks(
     const layers: PlayedCard[][] = []
     let winner = curLeader
     let credit = 1
+    // Im Stechen legen alle verdeckt → Wettkämpfer wählen ihre Karte „blind“,
+    // ohne die bereits gelegten Karten dieser Lage zu sehen.
+    let stechen = false
 
     for (;;) {
       const layer: PlayedCard[] = []
       const order = seatOrderFrom(curLeader, numPlayers).filter((id) => h[id].length > 0)
       for (const id of order) {
         const isC = contenders.includes(id)
-        const contenderCards = layer
-          .filter((pc) => contenders.includes(pc.playerId))
-          .map((pc) => pc.card)
+        const contenderCards = stechen
+          ? []
+          : layer.filter((pc) => contenders.includes(pc.playerId)).map((pc) => pc.card)
         const remaining = targets[id] - tricks[id]
         const card = chooseTactical(h[id], contenderCards, isC, remaining)
         h[id].splice(h[id].indexOf(card), 1)
@@ -54,6 +57,7 @@ export function simulateRoundTricks(
       }
       if (!handsEmpty) {
         contenders = tied
+        stechen = true
         continue
       }
       winner = erbenWinner(layer, contenders, curLeader, numPlayers)

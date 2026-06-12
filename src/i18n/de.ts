@@ -97,6 +97,9 @@ export const T = {
   scoreHitHint: 'Exakt getroffene Ansage.',
   scoreMiss: 'Strafe pro Stich daneben',
   scoreMissHint: 'Abzug je Stich Abweichung.',
+  ruleSuitTiebreak: 'Erben: Farbentscheid',
+  ruleSuitTiebreakHint:
+    'Bleibt der letzte Stich gleich, gewinnt die höhere Farbe (Rosen < Eichel < Schilten < Schellen) statt des nächsten Spielers.',
   resetDefaults: 'Standard',
   save: 'Speichern',
   on: 'An',

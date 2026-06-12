@@ -14,6 +14,9 @@ export function TrickArea() {
   // Beim Stechen/„Duell“ kämpfen nur die Gleichstands-Spieler um den Stich – die
   // Abwürfe der übrigen werden abgeblendet, damit klar ist, wer noch im Rennen ist.
   const isDuel = !flash && !!game.trick?.isStechen
+  // Im Duell legen alle ihre Karte verdeckt; aufgedeckt wird erst, wenn alle gelegt
+  // haben (dann erscheint der trickFlash) – so kann niemand auf die Karten reagieren.
+  const concealed = isDuel
   const contenders = game.trick?.contenders ?? []
   const isDimmed = (playerId: number) => isDuel && !contenders.includes(playerId)
   const banner =
@@ -74,6 +77,7 @@ export function TrickArea() {
                 </span>
                 <PlayingCard
                   card={pc.card}
+                  faceDown={concealed}
                   width={58}
                   highlight={isWinner ? 'winner' : dimmed ? 'dim' : 'none'}
                 />

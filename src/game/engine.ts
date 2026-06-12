@@ -181,7 +181,8 @@ function resolveLayer(state: GameState): void {
   }
 
   // Letzte Karte + Gleichstand → Erben.
-  const winner = erbenWinner(trick.currentLayer, trick.contenders, trick.leader, n)
+  const tiebreak = state.config.rules?.lastCardTiebreak ?? 'seat'
+  const winner = erbenWinner(trick.currentLayer, trick.contenders, trick.leader, n, tiebreak)
   finalizeTrick(state, winner, trick.layers.length, 'erben')
 }
 

@@ -61,6 +61,15 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             />
           </Row>
 
+          <Row title={T.ruleSuitTiebreak} hint={T.ruleSuitTiebreakHint}>
+            <Switch
+              on={rules.lastCardTiebreak === 'suit'}
+              onToggle={() =>
+                update({ lastCardTiebreak: rules.lastCardTiebreak === 'suit' ? 'seat' : 'suit' })
+              }
+            />
+          </Row>
+
           <button
             onClick={() => setRules({ ...DEFAULT_RULES })}
             className="glass w-full rounded-xl py-2.5 text-sm text-gold-200/80 active:scale-[0.98]"

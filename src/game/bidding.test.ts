@@ -123,7 +123,7 @@ describe('legalBids – Regel „nicht zweimal 0“ abschaltbar', () => {
       cardCount: 3,
       dealer: 3,
       lastRoundBids: [0, null, null, null],
-      rules: { doubleZeroRule: false, hitScore: 10, missPenalty: 5 },
+      rules: { doubleZeroRule: false, hitScore: 10, missPenalty: 5, lastCardTiebreak: 'seat' },
     })
     expect(legalBids(state, 0)).toEqual([0, 1, 2, 3])
   })

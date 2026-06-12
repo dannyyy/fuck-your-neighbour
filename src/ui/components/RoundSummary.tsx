@@ -4,6 +4,9 @@ import { T } from '../../i18n/de'
 import { useStore } from '../../state/store'
 import { TrickReview } from './TrickReview'
 
+/** Gemeinsames Spaltenraster für Kopfzeile und Datenzeilen → Zahlen bleiben bündig. */
+const COLS = 'grid grid-cols-[minmax(0,1fr)_2.25rem_2.75rem_3.25rem_3.5rem]'
+
 export function RoundSummary() {
   const game = useStore((s) => s.game)!
   const continueRound = useStore((s) => s.continueRound)
@@ -24,11 +27,12 @@ export function RoundSummary() {
         </p>
 
         <div className="space-y-1.5">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-2 text-[10px] uppercase tracking-wide text-gold-200/50">
+          <div className={`${COLS} gap-2 px-2 text-[10px] uppercase tracking-wide text-gold-200/50`}>
             <span />
             <span className="text-right">{T.bid}</span>
             <span className="text-right">{T.made}</span>
             <span className="text-right">{T.points}</span>
+            <span className="text-right">{T.total}</span>
           </div>
           {game.players.map((p, i) => {
             const delta = last.deltas[i]
@@ -38,19 +42,26 @@ export function RoundSummary() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05 * i }}
-                className={`grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 rounded-xl px-2 py-2 ${
+                className={`${COLS} items-center gap-2 rounded-xl px-2 py-2 ${
                   p.isHuman ? 'bg-gold-400/15' : 'bg-felt-950/30'
                 }`}
               >
                 <span className="truncate text-sm text-gold-200">{p.name}</span>
-                <span className="text-right text-sm text-gold-200/70">{last.bids[i] ?? '–'}</span>
-                <span className="text-right text-sm text-gold-200/70">{last.tricks[i]}</span>
+                <span className="text-right text-sm tabular-nums text-gold-200/70">
+                  {last.bids[i] ?? '–'}
+                </span>
+                <span className="text-right text-sm tabular-nums text-gold-200/70">
+                  {last.tricks[i]}
+                </span>
                 <span
-                  className={`text-right font-display text-base ${
+                  className={`text-right font-display text-base tabular-nums ${
                     delta >= 0 ? 'text-emerald-300' : 'text-rose-300'
                   }`}
                 >
                   {delta > 0 ? `+${delta}` : delta}
+                </span>
+                <span className="text-right text-sm tabular-nums text-gold-200">
+                  {last.totals[i]}
                 </span>
               </motion.div>
             )
