@@ -9,6 +9,7 @@ import {
   roundComplete,
   roundPoints,
   roundWarnings,
+  setDealer,
   setEntry,
   standings,
   trickSum,
@@ -136,6 +137,34 @@ describe('reorderPlayers', () => {
     const s = fresh()
     const same = reorderPlayers(s, [s.players[0].id])
     expect(same.players).toEqual(s.players)
+  })
+})
+
+describe('Geber (rotierend)', () => {
+  it('createSession verteilt den Geber reihum (Runde i → Spieler i mod n)', () => {
+    const s = fresh() // 3 Spieler
+    const ids = s.players.map((p) => p.id)
+    expect(s.rounds.map((r) => r.dealerId)).toEqual(
+      s.rounds.map((_, i) => ids[i % ids.length]),
+    )
+  })
+
+  it('setDealer setzt die Runde und rotiert ab dort weiter, frühere bleiben', () => {
+    const s = fresh()
+    const [a, b, c] = s.players
+    const before = s.rounds[0].dealerId
+    const next = setDealer(s, 1, c.id)
+    expect(next.rounds[0].dealerId).toBe(before) // Runde 0 unverändert
+    expect(next.rounds[1].dealerId).toBe(c.id)
+    expect(next.rounds[2].dealerId).toBe(a.id) // rotiert weiter
+    expect(next.rounds[3].dealerId).toBe(b.id)
+  })
+
+  it('copySession erzeugt frische, rotierende Geber', () => {
+    const copy = copySession(fresh())
+    const ids = copy.players.map((p) => p.id)
+    expect(copy.rounds[0].dealerId).toBe(ids[0])
+    expect(copy.rounds[1].dealerId).toBe(ids[1])
   })
 })
 

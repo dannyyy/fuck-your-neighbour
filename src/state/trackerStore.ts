@@ -4,6 +4,7 @@ import {
   createSession,
   renamePlayer as renamePlayerOp,
   reorderPlayers as reorderPlayersOp,
+  setDealer as setDealerOp,
   setEntry as setEntryOp,
 } from '../tracker/session'
 import type { TrackerScoring, TrackerSession } from '../tracker/types'
@@ -20,10 +21,19 @@ function loadSessions(): TrackerSession[] {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw) as Partial<PersistedTracker>
-    return Array.isArray(parsed.sessions) ? parsed.sessions : []
+    return Array.isArray(parsed.sessions) ? parsed.sessions.map(migrate) : []
   } catch {
     return []
   }
+}
+
+/** Füllt Felder auf, die ältere gespeicherte Sessions noch nicht hatten. */
+function migrate(session: TrackerSession): TrackerSession {
+  const n = session.players.length || 1
+  const rounds = session.rounds.map((round, i) =>
+    round.dealerId ? round : { ...round, dealerId: session.players[i % n]?.id ?? '' },
+  )
+  return { ...session, rounds }
 }
 
 function saveSessions(sessions: TrackerSession[]): void {
@@ -46,6 +56,7 @@ interface TrackerStoreState {
   open(sessionId: string): void
   close(): void
   setEntry(roundIndex: number, playerId: string, field: 'bid' | 'tricks', value: number | null): void
+  setDealer(roundIndex: number, dealerId: string): void
   reorderPlayers(orderedIds: string[]): void
   renamePlayer(playerId: string, name: string): void
 }
@@ -100,6 +111,10 @@ export const useTrackerStore = create<TrackerStoreState>((set, get) => ({
 
   setEntry(roundIndex, playerId, field, value) {
     set((state) => updateActive(state, (s) => setEntryOp(s, roundIndex, playerId, field, value)))
+  },
+
+  setDealer(roundIndex, dealerId) {
+    set((state) => updateActive(state, (s) => setDealerOp(s, roundIndex, dealerId)))
   },
 
   reorderPlayers(orderedIds) {
