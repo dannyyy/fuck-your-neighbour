@@ -130,6 +130,7 @@ export const T = {
   trackerSum: 'Summe',
   trackerFinished: 'Alle Runden erfasst',
   trackerScoreboard: 'Punktetafel',
+  trackerTabRound: 'Erfassen',
   trackerLeader: 'Führend',
   trackerEdit: 'Bearbeiten',
   trackerDone: 'Fertig',
