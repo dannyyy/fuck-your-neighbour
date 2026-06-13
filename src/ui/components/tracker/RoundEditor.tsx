@@ -16,8 +16,10 @@ export function RoundEditor({
   roundIndex: number
 }) {
   const setEntry = useTrackerStore((s) => s.setEntry)
+  const setDealer = useTrackerStore((s) => s.setDealer)
   const round = session.rounds[roundIndex]
   const warn = roundWarnings(round)
+  const dealerName = session.players.find((p) => p.id === round.dealerId)?.name ?? ''
 
   const bidSum = session.players.reduce((s, p) => s + (round.entries[p.id].bid ?? 0), 0)
   const trickSum = session.players.reduce((s, p) => s + (round.entries[p.id].tricks ?? 0), 0)
@@ -32,8 +34,21 @@ export function RoundEditor({
           const pts = roundPoints(round, p.id, session.scoring)
           return (
             <div key={p.id} className="glass rounded-2xl px-3.5 py-3">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="truncate font-display text-lg text-gold-200">{p.name}</span>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="truncate font-display text-lg text-gold-200">{p.name}</span>
+                  <button
+                    onClick={() => setDealer(roundIndex, p.id)}
+                    title={T.trackerDealerHint}
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-600 uppercase tracking-wider transition ${
+                      round.dealerId === p.id
+                        ? 'bg-gold-400/90 text-felt-950'
+                        : 'border border-gold-400/30 text-gold-200/35 hover:text-gold-200/80'
+                    }`}
+                  >
+                    {T.trackerDealer}
+                  </button>
+                </div>
                 {pts !== null && (
                   <span
                     className={`shrink-0 rounded-full px-2 py-0.5 font-display text-sm ${
@@ -88,7 +103,12 @@ export function RoundEditor({
         </div>
       </div>
 
-      {warn.bidConflict && <Warning>{T.trackerWarnBidSum}</Warning>}
+      {warn.bidConflict && (
+        <Warning>
+          {dealerName ? `${dealerName} (${T.trackerDealer}): ` : ''}
+          {T.trackerWarnBidSum}
+        </Warning>
+      )}
       {warn.trickMismatch && <Warning>{T.trackerWarnTrickSum}</Warning>}
     </div>
   )

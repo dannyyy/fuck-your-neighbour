@@ -13,10 +13,10 @@ export function makeId(): string {
   return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-function emptyRound(cards: number, players: TrackerPlayer[]): TrackerRound {
+function emptyRound(cards: number, players: TrackerPlayer[], dealerId: string): TrackerRound {
   const entries: Record<string, RoundEntry> = {}
   for (const p of players) entries[p.id] = { bid: null, tricks: null }
-  return { cards, entries }
+  return { cards, dealerId, entries }
 }
 
 /** Legt eine neue Session mit leeren Runden gemäß festem Spielplan an. */
@@ -36,7 +36,8 @@ export function createSession(opts: {
     players,
     scoring: opts.scoring ? { ...opts.scoring } : { ...DEFAULT_TRACKER_SCORING },
     schedule,
-    rounds: schedule.map((cards) => emptyRound(cards, players)),
+    // Der Geber rotiert je Runde reihum (Runde 1 → erster Spieler).
+    rounds: schedule.map((cards, i) => emptyRound(cards, players, players[i % players.length].id)),
   }
 }
 
@@ -148,6 +149,26 @@ export function setEntry(
         [playerId]: { ...round.entries[playerId], [field]: value },
       },
     }
+  })
+  return { ...session, rounds, updatedAt: Date.now() }
+}
+
+/**
+ * Setzt den Geber einer Runde und rotiert ihn von dort an reihum weiter (gemäß
+ * aktueller Sitzordnung). Frühere Runden bleiben unverändert.
+ */
+export function setDealer(
+  session: TrackerSession,
+  roundIndex: number,
+  dealerId: string,
+): TrackerSession {
+  const start = session.players.findIndex((p) => p.id === dealerId)
+  if (start < 0) return session
+  const n = session.players.length
+  const rounds = session.rounds.map((round, i) => {
+    if (i < roundIndex) return round
+    const pos = (start + (i - roundIndex)) % n
+    return { ...round, dealerId: session.players[pos].id }
   })
   return { ...session, rounds, updatedAt: Date.now() }
 }

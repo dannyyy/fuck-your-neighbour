@@ -143,4 +143,6 @@ export const T = {
   trackerTapToScore: 'Tippe je Spieler Ansage und Stiche an.',
   trackerActiveRound: 'Aktuelle Runde',
   trackerPrevRounds: 'Frühere Runden',
+  trackerDealer: 'Geber',
+  trackerDealerHint: 'Tippen, um den Geber dieser Runde zu setzen (rotiert weiter).',
 } as const

@@ -22,6 +22,8 @@ export interface RoundEntry {
 export interface TrackerRound {
   /** Kartenzahl dieser Runde (aus dem festen Spielplan). */
   cards: number
+  /** Spieler-ID des Gebers (sagt zuletzt an; rotiert je Runde, anpassbar). */
+  dealerId: string
   /** playerId → { bid, tricks } */
   entries: Record<string, RoundEntry>
 }
