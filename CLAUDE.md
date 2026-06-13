@@ -54,6 +54,19 @@ downward**: `ui → state → ai → game`. The `game` engine never imports Reac
   and import engine selectors (`legalBids`, `legalPlays`, `currentActor`) directly. German
   UI strings and rank/suit labels live in `src/i18n/de.ts`.
 
+- **`src/tracker/`** — a second, independent feature: a manual score tracker for *physical*
+  table games (no cards, no AI, no engine — just Ansage/Stiche/points). Pure & serializable
+  like `game`, the only shared logic is `game/scoring.ts` (`roundScore`). `createSession`
+  builds a session with a fixed card schedule (`schedule.ts`: high→1→high, high =
+  `min(6, floor(36/n))`, so 2–6 players get the same 11 rounds as the digital game, 7→9,
+  8→7) and pre-creates all empty rounds; entries are keyed by a stable player id so
+  reordering players never disturbs scores. All transitions (`setEntry`, `reorderPlayers`,
+  `renamePlayer`) are pure and return a new session. `roundWarnings` produces soft,
+  non-blocking hints (bid-sum = cards / trick-sum ≠ cards). Persistence + a separate
+  Zustand store live in `src/state/trackerStore.ts` (`fyn.tracker.v1` in `localStorage`);
+  the UI is `src/ui/screens/TrackerScreen.tsx` + `src/ui/components/tracker/`, reached from
+  the start screen. Default scoring is +11 / −5 (configurable per session).
+
 ## Rules that the code encodes (easy to get wrong)
 
 - **Custom rank order** (one place: `RANKS` in `game/cards.ts`, ascending strength):

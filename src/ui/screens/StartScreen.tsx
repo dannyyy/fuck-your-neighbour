@@ -11,9 +11,11 @@ const DIFFICULTIES: Difficulty[] = ['leicht', 'mittel', 'schwer']
 export function StartScreen({
   onShowRules,
   onShowSettings,
+  onShowTracker,
 }: {
   onShowRules: () => void
   onShowSettings: () => void
+  onShowTracker: () => void
 }) {
   const [numPlayers, setNumPlayers] = useState(4)
   const [difficulty, setDifficulty] = useState<Difficulty>('mittel')
@@ -107,6 +109,12 @@ export function StartScreen({
           className="w-full rounded-2xl bg-gold-400 py-4 font-display text-xl font-600 text-felt-950 shadow-xl shadow-gold-500/30 transition active:scale-[0.98]"
         >
           {T.start}
+        </button>
+        <button
+          onClick={onShowTracker}
+          className="glass w-full rounded-2xl py-3.5 font-display text-lg text-gold-200 transition active:scale-[0.98]"
+        >
+          {T.tracker}
         </button>
         <div className="flex items-center gap-3">
           <button onClick={onShowSettings} className="glass flex-1 rounded-xl py-3 text-sm text-gold-200">
