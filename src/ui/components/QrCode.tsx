@@ -1,9 +1,14 @@
 import QRCode from 'qrcode'
 import { useEffect, useMemo, useState } from 'react'
+import { T } from '../../i18n/de'
 
-/** Frames > diese Länge werden auf mehrere (animierte) QR-Codes verteilt. */
-const MAX_CHARS = 700
-const FRAME_MS = 700
+/**
+ * Frames > diese Länge werden auf mehrere (animierte) QR-Codes verteilt.
+ * Bewusst klein gehalten, damit jeder einzelne Code locker scannbar bleibt; der
+ * Scanner sammelt die Teile über mehrere Zyklen ein.
+ */
+const MAX_CHARS = 360
+const FRAME_MS = 1500
 
 interface FrameSet {
   id: string
@@ -39,7 +44,7 @@ export function QrCode({ data, size = 248 }: { data: string; size?: number }) {
 
   useEffect(() => {
     let alive = true
-    QRCode.toDataURL(frames[idx], { errorCorrectionLevel: 'M', margin: 1, width: size })
+    QRCode.toDataURL(frames[idx], { errorCorrectionLevel: 'L', margin: 2, width: size })
       .then((u) => alive && setUrl(u))
       .catch(() => {})
     return () => {
@@ -53,8 +58,16 @@ export function QrCode({ data, size = 248 }: { data: string; size?: number }) {
         {url && <img src={url} width={size} height={size} alt="QR" className="block" />}
       </div>
       {frames.length > 1 && (
-        <div className="text-xs text-gold-200/60">
-          {idx + 1}/{frames.length}
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex gap-1">
+            {frames.map((_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 w-4 rounded-full ${i === idx ? 'bg-gold-400' : 'bg-gold-400/25'}`}
+              />
+            ))}
+          </div>
+          <div className="text-xs text-gold-200/60">{T.qrMultipart}</div>
         </div>
       )}
     </div>

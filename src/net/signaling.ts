@@ -38,17 +38,32 @@ async function gunzip(bytes: Uint8Array): Promise<string> {
   return new TextDecoder().decode(ab)
 }
 
-/** Kürzt ein SDP minimal (entfernt überflüssige a=ssrc/leere Zeilen). */
-function trimSdp(sdp: string): string {
+/** Ist die Verbindungsadresse eines `a=candidate:`-Eintrags eine IPv6-Adresse? */
+function isIpv6Candidate(line: string): boolean {
+  // a=candidate:<foundation> <comp> <transport> <prio> <ADDRESS> <port> typ ...
+  const addr = line.split(' ')[4] ?? ''
+  return addr.includes(':')
+}
+
+/**
+ * Verkleinert das SDP, damit es möglichst in einen einzigen QR-Code passt – ohne
+ * die Verbindung zu gefährden: leere und für reine DataChannels überflüssige
+ * Zeilen raus, und IPv6-ICE-Kandidaten verwerfen (im Hotspot/LAN trägt IPv4 bzw.
+ * der `.local`/mDNS-Kandidat). IPv4- und mDNS-Kandidaten bleiben erhalten.
+ */
+export function compactSdp(sdp: string): string {
   return sdp
-    .split('\r\n')
+    .split(/\r?\n/)
     .filter((line) => line.length > 0)
+    .filter((line) => !line.startsWith('a=extmap-allow-mixed'))
+    .filter((line) => !line.startsWith('a=msid-semantic'))
+    .filter((line) => !(line.startsWith('a=candidate:') && isIpv6Candidate(line)))
     .join('\r\n')
 }
 
 /** Kodiert eine Offer/Answer in einen kompakten String (Flag + Typ + Payload). */
 export async function encodeSignal(desc: RTCSessionDescriptionInit): Promise<string> {
-  const payload = JSON.stringify({ t: desc.type === 'offer' ? 'o' : 'a', s: trimSdp(desc.sdp ?? '') })
+  const payload = JSON.stringify({ t: desc.type === 'offer' ? 'o' : 'a', s: compactSdp(desc.sdp ?? '') })
   if (hasCompression) {
     return 'g' + bytesToBase64(await gzip(payload))
   }

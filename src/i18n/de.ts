@@ -188,6 +188,7 @@ export const T = {
   pairShowAnswerHint: 'Der Host scannt diesen Antwort-Code – danach seid ihr verbunden.',
   pairConnecting: 'Verbinde …',
   qrFrames: 'Teile',
+  qrMultipart: 'Mehrteiliger Code – Kamera ruhig draufhalten, sammelt sich automatisch.',
   cameraError: 'Kamera nicht verfügbar. Berechtigung erteilt?',
   leaveGame: 'Verlassen',
   errFull: 'Die Runde ist bereits voll (max. 6).',
