@@ -1,9 +1,28 @@
 /**
- * (De)Kodierung der WebRTC-Signalisierung (SDP) für die QR-Paarung – ganz ohne
- * Server. SDP wird (falls verfügbar) per `CompressionStream('gzip')` komprimiert
- * und base64-kodiert; fehlt die API (ältere iOS-Versionen), wird unkomprimiert
- * übertragen. Die Aufteilung auf mehrere QR-Frames übernimmt die QR-Komponente.
+ * (De)Kodierung der WebRTC-Signalisierung für die QR-Paarung – ganz ohne Server.
+ *
+ * Statt das komplette SDP zu übertragen, extrahieren wir nur die *dynamischen*
+ * Felder (ICE-ufrag/-pwd, DTLS-Fingerprint, setup-Rolle, ICE-Kandidaten) und
+ * bauen auf der Gegenseite ein vollständiges, gültiges DataChannel-SDP aus einer
+ * festen Vorlage wieder auf. Das schrumpft das Offer/Answer drastisch, sodass es
+ * meist in einen *einzigen* QR-Code passt. Zusätzlich wird (falls verfügbar) per
+ * `CompressionStream('gzip')` komprimiert und base64-kodiert.
  */
+
+interface PackedSignal {
+  /** 'o' = offer, 'a' = answer. */
+  t: 'o' | 'a'
+  /** ice-ufrag */
+  u: string
+  /** ice-pwd */
+  p: string
+  /** fingerprint (inkl. Algorithmus, z. B. "sha-256 AA:BB:…") */
+  f: string
+  /** setup-Rolle (actpass | active | passive) */
+  s: string
+  /** ICE-Kandidaten, auf die Kernfelder gekürzt (ohne "a=candidate:"-Präfix) */
+  c: string[]
+}
 
 function bytesToBase64(bytes: Uint8Array): string {
   let bin = ''
@@ -38,32 +57,67 @@ async function gunzip(bytes: Uint8Array): Promise<string> {
   return new TextDecoder().decode(ab)
 }
 
-/** Ist die Verbindungsadresse eines `a=candidate:`-Eintrags eine IPv6-Adresse? */
-function isIpv6Candidate(line: string): boolean {
-  // a=candidate:<foundation> <comp> <transport> <prio> <ADDRESS> <port> typ ...
-  const addr = line.split(' ')[4] ?? ''
+function firstValue(lines: string[], prefix: string): string {
+  const line = lines.find((l) => l.startsWith(prefix))
+  return line ? line.slice(prefix.length).trim() : ''
+}
+
+/** Ist die Verbindungsadresse eines Kandidaten (ohne "a=candidate:") IPv6? */
+function isIpv6Candidate(cand: string): boolean {
+  const addr = cand.split(' ')[4] ?? ''
   return addr.includes(':')
 }
 
 /**
- * Verkleinert das SDP, damit es möglichst in einen einzigen QR-Code passt – ohne
- * die Verbindung zu gefährden: leere und für reine DataChannels überflüssige
- * Zeilen raus, und IPv6-ICE-Kandidaten verwerfen (im Hotspot/LAN trägt IPv4 bzw.
- * der `.local`/mDNS-Kandidat). IPv4- und mDNS-Kandidaten bleiben erhalten.
+ * Extrahiert die für die Verbindung nötigen Felder aus einem SDP. IPv6-Kandidaten
+ * werden verworfen (im Hotspot/LAN trägt IPv4 bzw. der `.local`/mDNS-Kandidat),
+ * jeder Kandidat auf die 8 Kernfelder gekürzt (foundation…typ host).
  */
-export function compactSdp(sdp: string): string {
-  return sdp
-    .split(/\r?\n/)
-    .filter((line) => line.length > 0)
-    .filter((line) => !line.startsWith('a=extmap-allow-mixed'))
-    .filter((line) => !line.startsWith('a=msid-semantic'))
-    .filter((line) => !(line.startsWith('a=candidate:') && isIpv6Candidate(line)))
-    .join('\r\n')
+export function packSdp(desc: RTCSessionDescriptionInit): PackedSignal {
+  const lines = (desc.sdp ?? '').split(/\r?\n/)
+  const c = lines
+    .filter((l) => l.startsWith('a=candidate:'))
+    .map((l) => l.slice('a=candidate:'.length))
+    .filter((cand) => !isIpv6Candidate(cand))
+    .map((cand) => cand.split(' ').slice(0, 8).join(' '))
+  return {
+    t: desc.type === 'offer' ? 'o' : 'a',
+    u: firstValue(lines, 'a=ice-ufrag:'),
+    p: firstValue(lines, 'a=ice-pwd:'),
+    f: firstValue(lines, 'a=fingerprint:'),
+    s: firstValue(lines, 'a=setup:') || 'actpass',
+    c,
+  }
 }
 
-/** Kodiert eine Offer/Answer in einen kompakten String (Flag + Typ + Payload). */
+/** Baut aus den gepackten Feldern wieder ein vollständiges DataChannel-SDP. */
+export function buildSdp(pk: PackedSignal): RTCSessionDescriptionInit {
+  const candidateLines = pk.c.map((c) => `a=candidate:${c}`)
+  const sdp =
+    [
+      'v=0',
+      'o=- 1 2 IN IP4 127.0.0.1',
+      's=-',
+      't=0 0',
+      'a=group:BUNDLE 0',
+      'm=application 9 UDP/DTLS/SCTP webrtc-datachannel',
+      'c=IN IP4 0.0.0.0',
+      `a=ice-ufrag:${pk.u}`,
+      `a=ice-pwd:${pk.p}`,
+      'a=ice-options:trickle',
+      `a=fingerprint:${pk.f}`,
+      `a=setup:${pk.s}`,
+      'a=mid:0',
+      'a=sctp-port:5000',
+      'a=max-message-size:262144',
+      ...candidateLines,
+    ].join('\r\n') + '\r\n'
+  return { type: pk.t === 'o' ? 'offer' : 'answer', sdp }
+}
+
+/** Kodiert eine Offer/Answer in einen kompakten String (Flag + Payload). */
 export async function encodeSignal(desc: RTCSessionDescriptionInit): Promise<string> {
-  const payload = JSON.stringify({ t: desc.type === 'offer' ? 'o' : 'a', s: compactSdp(desc.sdp ?? '') })
+  const payload = JSON.stringify(packSdp(desc))
   if (hasCompression) {
     return 'g' + bytesToBase64(await gzip(payload))
   }
@@ -72,9 +126,7 @@ export async function encodeSignal(desc: RTCSessionDescriptionInit): Promise<str
 
 export async function decodeSignal(code: string): Promise<RTCSessionDescriptionInit> {
   const flag = code[0]
-  const body = code.slice(1)
-  const bytes = base64ToBytes(body)
+  const bytes = base64ToBytes(code.slice(1))
   const json = flag === 'g' ? await gunzip(bytes) : new TextDecoder().decode(bytes)
-  const parsed = JSON.parse(json) as { t: 'o' | 'a'; s: string }
-  return { type: parsed.t === 'o' ? 'offer' : 'answer', sdp: parsed.s }
+  return buildSdp(JSON.parse(json) as PackedSignal)
 }
