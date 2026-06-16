@@ -7,8 +7,9 @@ import path from 'node:path'
 
 export default defineConfig(({ command }) => ({
   // Build → Projekt-Pfad der GitHub Page (https://dannyyy.github.io/fuck-your-neighbour/),
-  // Dev-Server bleibt unter "/".
-  base: command === 'build' ? '/fuck-your-neighbour/' : '/',
+  // Dev-Server bleibt unter "/". Über BASE_PATH überschreibbar (z. B. "/" für eine
+  // an der Wurzel ausgelieferte Vorschau wie Cloudflare Pages).
+  base: process.env.BASE_PATH ?? (command === 'build' ? '/fuck-your-neighbour/' : '/'),
   plugins: [
     react(),
     tailwindcss(),
