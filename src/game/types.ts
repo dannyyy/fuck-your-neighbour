@@ -88,6 +88,16 @@ export interface TrickInProgress {
   isStechen: boolean
 }
 
+/**
+ * Kurz eingeblendeter, abgeschlossener Stich (für die UI-Animation). Bewusst
+ * serialisierbar, damit Host und Client dieselbe Form verwenden können.
+ */
+export interface TrickFlash {
+  winnerId: number
+  cards: PlayedCard[]
+  resolvedBy: TrickResolution
+}
+
 export interface GameState {
   config: GameConfig
   seed: number

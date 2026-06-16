@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { Card } from '../game/cards'
 import { createGame, currentActor, nextRound, placeBid, playCard } from '../game/engine'
 import { makeRng, randomSeed, type Rng } from '../game/rng'
-import type { Difficulty, GameRules, GameState, PlayedCard } from '../game/types'
+import type { Difficulty, GameRules, GameState, TrickFlash } from '../game/types'
 import { buildView, createAi, type Ai } from '../ai'
 import { loadSettings, saveSettings, type PersistedSettings } from './settings'
 import { playSfx, setSoundEnabled, unlockAudio } from './sound'
@@ -18,13 +18,21 @@ const NAMES = ['Du', 'Lena', 'Marco', 'Sven', 'Nadia', 'Reto']
 
 export type Screen = 'start' | 'game'
 
-export interface TrickFlash {
-  winnerId: number
-  cards: PlayedCard[]
-  resolvedBy: 'high' | 'erben'
-}
+export type { TrickFlash } from '../game/types'
 
 type Settings = PersistedSettings
+
+/**
+ * Brücke zum Online-/Lokal-Mehrspielermodus. Ist sie gesetzt, rendert die
+ * bestehende Spiel-UI weiterhin aus diesem Store (die redigierte Sicht wird via
+ * `pushNetView` gespiegelt), aber Aktionen des Menschen gehen an den Host bzw.
+ * werden als Absicht versendet, statt die Engine lokal auszuführen.
+ */
+export interface NetBridge {
+  bid(bid: number): void
+  play(card: Card): void
+  continue(): void
+}
 
 interface StoreState {
   screen: Screen
@@ -36,6 +44,10 @@ interface StoreState {
   trickFlash: TrickFlash | null
   /** Spieler-ID, deren KI gerade „nachdenkt“ (für Indikator). */
   thinking: number | null
+  /** Gesetzt im Mehrspielermodus – lenkt Aktionen an den Host um. */
+  netBridge: NetBridge | null
+  /** Darf dieses Gerät die Runde weiterschalten? (Host/Solo ja, Client nein.) */
+  canContinue: boolean
 
   startGame(opts: { numPlayers: number; difficulty: Difficulty }): void
   humanBid(bid: number): void
@@ -44,6 +56,12 @@ interface StoreState {
   backToMenu(): void
   toggleSound(): void
   setRules(rules: GameRules): void
+  /** Mehrspieler: redigierte Sicht in die UI spiegeln. */
+  pushNetView(view: { state: GameState; flash: TrickFlash | null; thinking: number | null }): void
+  /** Mehrspieler: Aktionen umlenken und Weiterschalt-Recht setzen. */
+  attachNet(bridge: NetBridge, canContinue: boolean): void
+  /** Mehrspieler beenden und Spielzustand räumen. */
+  detachNet(): void
 }
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
@@ -120,6 +138,8 @@ export const useStore = create<StoreState>((set, get) => ({
   settings: initialSettings,
   trickFlash: null,
   thinking: null,
+  netBridge: null,
+  canContinue: true,
 
   startGame({ numPlayers, difficulty }) {
     unlockAudio()
@@ -145,8 +165,15 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   humanBid(bid) {
-    const { game } = get()
+    const { game, netBridge } = get()
     if (!game) return
+    if (netBridge) {
+      const actor = currentActor(game)
+      if (!actor || actor.kind !== 'bid' || actor.playerId !== game.config.humanIndex) return
+      playSfx('bid')
+      netBridge.bid(bid)
+      return
+    }
     const actor = currentActor(game)
     if (!actor || actor.kind !== 'bid' || !game.players[actor.playerId].isHuman) return
     const next = placeBid(game, actor.playerId, bid)
@@ -156,8 +183,15 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   async humanPlay(card) {
-    const { game } = get()
+    const { game, netBridge } = get()
     if (!game) return
+    if (netBridge) {
+      const actor = currentActor(game)
+      if (!actor || actor.kind !== 'play' || actor.playerId !== game.config.humanIndex) return
+      playSfx('play')
+      netBridge.play(card)
+      return
+    }
     const actor = currentActor(game)
     if (!actor || actor.kind !== 'play' || !game.players[actor.playerId].isHuman) return
     const next = playCard(game, actor.playerId, card)
@@ -167,15 +201,56 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   continueRound() {
-    const { game } = get()
+    const { game, netBridge, canContinue } = get()
     if (!game || game.phase !== 'roundEnd') return
+    if (netBridge) {
+      if (canContinue) {
+        playSfx('click')
+        netBridge.continue()
+      }
+      return
+    }
     playSfx('click')
     set({ game: nextRound(game) })
     void runAi()
   },
 
   backToMenu() {
-    set({ screen: 'start', game: null, ai: null, rng: null, trickFlash: null, thinking: null })
+    set({
+      screen: 'start',
+      game: null,
+      ai: null,
+      rng: null,
+      trickFlash: null,
+      thinking: null,
+      netBridge: null,
+      canContinue: true,
+    })
+  },
+
+  pushNetView({ state, flash, thinking }) {
+    const prev = get().game
+    set({ screen: 'game', game: state, trickFlash: flash, thinking })
+    const grew = !prev || prev.completedTricks.length < state.completedTricks.length
+    if (flash && grew) playSfx('trickWin')
+    if (state.phase === 'roundEnd' && prev?.phase !== 'roundEnd') playSfx('roundEnd')
+    if (state.phase === 'gameEnd' && prev?.phase !== 'gameEnd') playSfx('gameEnd')
+  },
+
+  attachNet(bridge, canContinue) {
+    unlockAudio()
+    set({ netBridge: bridge, canContinue, ai: null, rng: null, trickFlash: null, thinking: null })
+  },
+
+  detachNet() {
+    set({
+      netBridge: null,
+      canContinue: true,
+      game: null,
+      trickFlash: null,
+      thinking: null,
+      screen: 'start',
+    })
   },
 
   toggleSound() {

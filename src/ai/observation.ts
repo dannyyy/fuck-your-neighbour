@@ -57,3 +57,54 @@ export function buildView(state: GameState, playerId: number): PlayerView {
     legalPlays: state.phase === 'playing' ? legalPlays(state, playerId) : [],
   }
 }
+
+/**
+ * Platzhalter für verdeckte Karten in einem redigierten Zustand. Der Wert ist
+ * bewusst kein gültiger Rang/Farbe – er wird nie aufgedeckt gerendert (nur an
+ * Stellen, die ohnehin `faceDown` zeichnen), trägt also keinerlei Information.
+ */
+export const HIDDEN_CARD = { suit: 'hidden', rank: 'hidden' } as unknown as Card
+
+export function isHiddenCard(card: Card): boolean {
+  return (card as { suit: string }).suit === 'hidden'
+}
+
+/**
+ * Baut einen vollständigen, aber **redigierten** `GameState` aus Sicht von
+ * `forSeat`. Anders als `buildView` (für die KI) behält das Ergebnis exakt die
+ * `GameState`-Form, sodass die bestehenden UI-Komponenten es unverändert
+ * rendern – ideal, um jedem entfernten Spieler nur seine legale Sicht zu senden.
+ *
+ * Es gelten dieselben Geheimhaltungsregeln wie in `buildView`:
+ *  - fremde Hände werden verdeckt (Anzahl bleibt erhalten),
+ *  - in der 1-Karten-Runde ist die eigene Karte verdeckt, die fremden offen,
+ *  - eine laufende Stechen-Lage bleibt verdeckt,
+ *  - der Seed wird entfernt (sonst liesse sich das Geben rekonstruieren).
+ */
+export function redactState(state: GameState, forSeat: number): GameState {
+  const redacted = structuredClone(state)
+  const isOne = state.isOneCardRound
+
+  for (const p of redacted.players) {
+    if (p.id === forSeat) {
+      // Eigene Karte in der 1-Karten-Runde verdecken; sonst Hand sichtbar lassen.
+      if (isOne) p.hand = p.hand.map(() => HIDDEN_CARD)
+    } else if (!isOne) {
+      // Fremde Hand verdecken, aber die Anzahl (öffentlich) erhalten.
+      p.hand = p.hand.map(() => HIDDEN_CARD)
+    }
+    // 1-Karten-Runde + fremder Spieler: Karte bleibt offen sichtbar (legal).
+  }
+
+  // Laufende Stechen-Lage verdeckt halten (Positionen/Spieler bleiben erhalten).
+  if (redacted.trick?.isStechen) {
+    redacted.trick.currentLayer = redacted.trick.currentLayer.map((pc) => ({
+      playerId: pc.playerId,
+      card: HIDDEN_CARD,
+    }))
+  }
+
+  redacted.seed = 0
+  redacted.config = { ...redacted.config, seed: 0, humanIndex: forSeat }
+  return redacted
+}

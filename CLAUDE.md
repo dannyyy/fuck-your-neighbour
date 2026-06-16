@@ -50,6 +50,23 @@ downward**: `ui → state → ai → game`. The `game` engine never imports Reac
   asset files. Player-facing options (sound + the configurable rule set) are persisted
   to `localStorage` via `src/state/settings.ts` and fed into the game as `GameConfig.rules`.
 
+- **`src/net/`** — offline local multiplayer (play with friends on a plane, no internet).
+  **Host-authoritative**: one device runs the real engine + AI as the single source of truth
+  (`hostSession.ts`, a generalized `runAi` loop — AI seats auto-advance, human seats wait for
+  an intent); thin **clients** (`clientSession.ts`) only render a *redacted* `GameState` and
+  send `{bid}`/`{play}` intents back. Redaction reuses the engine's secrecy rules:
+  `redactState(state, seat)` in `src/ai/observation.ts` (sibling of `buildView`) blanks other
+  hands, inverts the 1-card round, conceals the Stechen layer, and strips the seed — the
+  result is a valid `GameState`, so the **existing** `GameScreen`/`TrickArea`/… render it
+  unchanged. The transport is behind an interface (`transport.ts`): `webrtcTransport.ts`
+  (WebRTC DataChannels, peers paired by **QR** via `signaling.ts` — gzip+base64 SDP, no
+  server/STUN) is the shipped PWA transport; `loopbackTransport.ts` is an in-memory pair for
+  tests/two-tab dev; a future native Bluetooth/Nearby transport (Capacitor) implements the
+  same interface with no changes above it. `state/netStore.ts` drives lobby/pairing and
+  mirrors the per-player view into the solo `store.ts` (via `pushNetView` + a `NetBridge` that
+  redirects `humanBid`/`humanPlay`/`continueRound`), so all game UI is reused. Sessions are
+  framework-agnostic and node-tested over loopback (`net/orchestration.test.ts`).
+
 - **`src/ui/`** — React + Tailwind v4 + Framer Motion. Components read `game` from the store
   and import engine selectors (`legalBids`, `legalPlays`, `currentActor`) directly. German
   UI strings and rank/suit labels live in `src/i18n/de.ts`.

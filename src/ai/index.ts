@@ -6,5 +6,5 @@ export function createAi(difficulty: Difficulty): Ai {
   return makeStrategy(difficulty)
 }
 
-export { buildView } from './observation'
+export { buildView, redactState, HIDDEN_CARD, isHiddenCard } from './observation'
 export type { Ai, PlayerView } from './types'

@@ -10,6 +10,7 @@ const COLS = 'grid grid-cols-[minmax(0,1fr)_2.25rem_2.75rem_3.25rem_3.5rem]'
 export function RoundSummary() {
   const game = useStore((s) => s.game)!
   const continueRound = useStore((s) => s.continueRound)
+  const canContinue = useStore((s) => s.canContinue)
   const [showReview, setShowReview] = useState(false)
   const last = game.history[game.history.length - 1]
   if (!last) return null
@@ -76,12 +77,18 @@ export function RoundSummary() {
           >
             {T.reviewTricks}
           </button>
-          <button
-            onClick={continueRound}
-            className="flex-1 rounded-2xl bg-gold-400 py-3 font-display text-lg text-felt-950 shadow-lg active:scale-[0.98]"
-          >
-            {T.continue}
-          </button>
+          {canContinue ? (
+            <button
+              onClick={continueRound}
+              className="flex-1 rounded-2xl bg-gold-400 py-3 font-display text-lg text-felt-950 shadow-lg active:scale-[0.98]"
+            >
+              {T.continue}
+            </button>
+          ) : (
+            <div className="flex-1 rounded-2xl bg-felt-950/40 py-3 text-center font-display text-base text-gold-200/70">
+              {T.waitingForHost}
+            </div>
+          )}
         </div>
       </motion.div>
 

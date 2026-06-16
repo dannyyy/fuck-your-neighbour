@@ -9,10 +9,12 @@ import { SwissSuit } from '../cards/SwissSuit'
 export function ModeSelect({
   onComputer,
   onFriends,
+  onOnline,
   onShowRules,
 }: {
   onComputer: () => void
   onFriends: () => void
+  onOnline: () => void
   onShowRules: () => void
 }) {
   const fade = {
@@ -59,12 +61,15 @@ export function ModeSelect({
           />
         </motion.div>
         <motion.div custom={2} initial="hidden" animate="show" variants={fade}>
+          <ModeCard label={T.modeOnline} hint={T.modeOnlineHint} onClick={onOnline} />
+        </motion.div>
+        <motion.div custom={3} initial="hidden" animate="show" variants={fade}>
           <ModeCard label={T.modeFriends} hint={T.modeFriendsHint} onClick={onFriends} />
         </motion.div>
       </div>
 
       <motion.div
-        custom={3}
+        custom={4}
         initial="hidden"
         animate="show"
         variants={fade}
